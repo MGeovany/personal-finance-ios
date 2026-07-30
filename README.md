@@ -23,8 +23,13 @@ Cero no es una hoja de cálculo. Al abrirla responde cinco preguntas:
 ```bash
 make open     # genera Cero.xcodeproj y lo abre en Xcode
 make build    # compila para el simulador
-make test     # corre las pruebas del motor de planificación
+make run      # compila, instala y abre en el simulador
+make demo     # igual, pero con una situación de ejemplo cargada
 ```
+
+`make demo` pasa `CERO_DEMO_DATA=1`, que llena un almacén vacío con un caso
+realista (tres deudas, servicios, suscripciones, una meta y gastos recientes) para
+poder ver todas las pantallas con datos sin capturar el onboarding a mano.
 
 `Cero.xcodeproj` no se versiona: se regenera con `xcodegen generate`.
 

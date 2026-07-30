@@ -1,9 +1,10 @@
 import Foundation
 
-/// Subtracts every unavoidable commitment from income.
+/// Subtracts every unavoidable monthly commitment from income.
 ///
-/// Money already reserved for card purchases is treated as committed: the user
-/// promised it to a statement, so offering it again would be a lie.
+/// Money reserved for card statements is carried through untouched rather than
+/// subtracted: those purchases were already recorded against their category
+/// budgets, and a reservation settled this month is not an obligation that repeats.
 struct CashFlowCalculator: CashFlowCalculating {
     func cashFlow(
         for snapshot: FinancialSnapshot,
@@ -11,11 +12,12 @@ struct CashFlowCalculator: CashFlowCalculating {
     ) -> CashFlow {
         CashFlow(
             income: snapshot.totalIncome,
-            fixedExpenses: snapshot.fixedExpenses.totalMonthly + snapshot.reservedForCards,
+            fixedExpenses: snapshot.fixedExpenses.totalMonthly,
             utilities: snapshot.utilities.totalMonthly,
             subscriptions: snapshot.subscriptions.totalMonthly,
             minimumPayments: snapshot.totalMinimumPayments,
-            emergencyContribution: emergencyContribution
+            emergencyContribution: emergencyContribution,
+            reservedForCards: snapshot.reservedForCards
         )
     }
 }
