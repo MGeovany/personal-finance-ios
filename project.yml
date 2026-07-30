@@ -1,0 +1,54 @@
+name: Cero
+options:
+  bundleIdPrefix: com.mgeovany.cero
+  deploymentTarget:
+    iOS: "18.0"
+  createIntermediateGroups: true
+
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    DEVELOPMENT_TEAM: ""
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+
+targets:
+  Cero:
+    type: application
+    platform: iOS
+    sources:
+      - path: Sources
+    info:
+      path: Sources/App/Info.plist
+      properties:
+        CFBundleDisplayName: Cero
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.mgeovany.cero
+        INFOPLIST_KEY_UIUserInterfaceStyle: Automatic
+
+  CeroTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: CeroTests
+    dependencies:
+      - target: Cero
+
+schemes:
+  Cero:
+    build:
+      targets:
+        Cero: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - CeroTests
