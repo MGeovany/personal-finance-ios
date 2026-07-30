@@ -57,6 +57,16 @@ final class OnboardingViewModel {
         hasFinished = true
     }
 
+    /// Clears the flow so it can be walked again from the beginning.
+    ///
+    /// Needed when the store is emptied: without this the old draft would still be
+    /// here and `hasFinished` would immediately send the user past setup again.
+    func restart() {
+        draft = OnboardingDraft()
+        step = .welcome
+        hasFinished = false
+    }
+
     // MARK: - Draft editing
     //
     // Kept here rather than in the views so each step view stays a layout.

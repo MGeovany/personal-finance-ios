@@ -27,6 +27,8 @@ final class AppDependencies {
     let planStore: PlanStore
     let preferences: PlanPreferencing
     let notifications: PlanNotificationScheduling
+    let router: AppRouter
+    let storeResetting: StoreResetting
 
     let money: MoneyFormatting
     let dates: PlanDateFormatting
@@ -73,6 +75,15 @@ final class AppDependencies {
         self.planStore = planStore
         self.preferences = ProfileSettingsService(profiles: profiles, planStore: planStore)
 
+        let router = AppRouter(hasCompletedOnboarding: profiles.profile().hasCompletedOnboarding)
+        self.router = router
+        self.storeResetting = StoreResetter(
+            context: context,
+            categories: categories,
+            planStore: planStore,
+            router: router
+        )
+
         self.money = MoneyFormatter()
         self.dates = PlanDateFormatter()
         self.monthKeys = MonthKeyFormatter()
@@ -98,15 +109,17 @@ final class AppDependencies {
         let container = (try? ModelSchema.container()) ?? (try! ModelSchema.inMemoryContainer())
         let dependencies = AppDependencies(container: container)
 
-        if DemoDataSeeder.isRequested {
-            dependencies.seedDemoData()
+        if MockUser.isRequestedAtLaunch {
+            dependencies.loadMockUser()
         }
         return dependencies
     }
 
-    /// Only reachable through the `CERO_DEMO_DATA` launch variable.
-    func seedDemoData() {
-        DemoDataSeeder(
+    /// Loads the saved sample situation into an empty store. Asked for explicitly:
+    /// through `CERO_MOCK_USER=1` at launch, or from the developer section in
+    /// settings. A normal launch never calls this.
+    func loadMockUser() {
+        MockUser(
             profiles: profiles,
             fixedExpenses: fixedExpenses,
             utilities: utilities,
@@ -117,7 +130,11 @@ final class AppDependencies {
             expenses: expenses,
             planStore: planStore
         )
-        .seedIfNeeded()
+        .loadIfStoreIsEmpty()
+
+        if profile.hasCompletedOnboarding {
+            router.phase = .main
+        }
     }
 
     static func preview() -> AppDependencies {

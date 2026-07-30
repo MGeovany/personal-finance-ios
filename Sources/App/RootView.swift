@@ -1,23 +1,17 @@
 import SwiftUI
 
-/// Decides what the user sees first: setup, the plan choice that follows it, or
-/// the app itself.
+/// Shows setup, the plan choice that follows it, or the app itself.
+///
+/// The phase lives in `AppRouter` rather than here, so emptying the store can send
+/// the user back to setup without this view knowing why.
 struct RootView: View {
     let dependencies: AppDependencies
 
-    @State private var phase: Phase
     /// Held in state so the draft survives every redraw of the flow.
     @State private var onboardingModel: OnboardingViewModel
 
-    /// Setup and the first plan choice are one continuous flow, but the choice must
-    /// happen *after* the data is saved — otherwise there would be no plans to compare.
-    private enum Phase {
-        case onboarding, planChoice, main
-    }
-
     init(dependencies: AppDependencies) {
         self.dependencies = dependencies
-        self._phase = State(initialValue: dependencies.profile.hasCompletedOnboarding ? .main : .onboarding)
         self._onboardingModel = State(
             initialValue: OnboardingViewModel(
                 committer: OnboardingCommitter(
@@ -38,24 +32,28 @@ struct RootView: View {
 
     var body: some View {
         content
-            .animation(.easeInOut(duration: 0.25), value: phase)
+            .animation(.easeInOut(duration: 0.25), value: dependencies.router.phase)
+            // Coming back to setup means the store was emptied, so the flow starts over.
+            .onChange(of: dependencies.router.phase) { _, phase in
+                if phase == .onboarding { onboardingModel.restart() }
+            }
     }
 
     @ViewBuilder
     private var content: some View {
-        switch phase {
+        switch dependencies.router.phase {
         case .onboarding:
             OnboardingFlowView(model: onboardingModel, dependencies: dependencies)
-                // The view model reports that it saved; routing stays here, so it
+                // The view model reports that it saved; routing stays out here, so it
                 // never needs to know a navigation stack exists.
                 .onChange(of: onboardingModel.hasFinished) { _, finished in
-                    if finished { phase = .planChoice }
+                    if finished { dependencies.router.phase = .planChoice }
                 }
 
         case .planChoice:
             NavigationStack {
                 PlanComparisonView(dependencies: dependencies, isInitialChoice: true) {
-                    phase = .main
+                    dependencies.router.phase = .main
                 }
             }
 

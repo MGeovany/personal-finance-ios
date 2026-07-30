@@ -20,6 +20,10 @@ struct SettingsView: View {
             catalogSection
             remindersSection
             closesSection
+
+            #if DEBUG
+            DeveloperSection(dependencies: dependencies)
+            #endif
         }
         .navigationTitle("Ajustes")
         .sheet(isPresented: $showsWeeklyClose) {

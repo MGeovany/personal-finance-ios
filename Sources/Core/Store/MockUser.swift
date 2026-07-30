@@ -1,13 +1,17 @@
 import Foundation
 
-/// Fills an empty store with a plausible situation.
+/// A saved sample situation: one household with three debts, services,
+/// subscriptions, a goal and a few days of spending.
 ///
-/// Only ever runs when the app is launched with `CERO_DEMO_DATA=1`, so it cannot
-/// touch a real user's data. Its purpose is to make the screens inspectable —
-/// during development, in screenshots, and in previews — without typing a full
-/// setup by hand every time.
+/// Never loaded on its own. It has to be asked for — with `CERO_MOCK_USER=1` at
+/// launch, or from the developer section in settings — so the app a real user
+/// opens is always empty and theirs to fill.
 @MainActor
-struct DemoDataSeeder {
+struct MockUser {
+    /// Shown wherever the fixture is offered, so it is obvious what is being loaded.
+    static let name = "Usuario de prueba"
+    static let summary = "Ingreso L45,000 · tres deudas por L175,500 · servicios, suscripciones, una meta y gastos recientes"
+
     private let profiles: ProfileProviding
     private let fixedExpenses: FixedExpenseRepositing
     private let utilities: UtilityRepositing
@@ -18,9 +22,9 @@ struct DemoDataSeeder {
     private let expenses: ExpenseRepositing
     private let planStore: PlanStore
 
-    /// Whether the current launch asked for demo data.
-    static var isRequested: Bool {
-        ProcessInfo.processInfo.environment["CERO_DEMO_DATA"] == "1"
+    /// Whether this launch asked for the sample user.
+    static var isRequestedAtLaunch: Bool {
+        ProcessInfo.processInfo.environment["CERO_MOCK_USER"] == "1"
     }
 
     init(
@@ -45,8 +49,9 @@ struct DemoDataSeeder {
         self.planStore = planStore
     }
 
-    /// Seeds only when there is nothing there, so relaunching does not duplicate.
-    func seedIfNeeded(now: Date = Date()) {
+    /// Loads the sample situation, but only into an empty store: it must never
+    /// overwrite something the user typed.
+    func loadIfStoreIsEmpty(now: Date = Date()) {
         guard debts.all().isEmpty else { return }
 
         seedProfile()
@@ -67,7 +72,7 @@ struct DemoDataSeeder {
         profile.savings = 25_000
         profile.groceryMode = .hybrid
         profile.hasCompletedOnboarding = true
-        // Demo launches are for inspecting screens, so they must not trigger the
+        // The sample user exists to inspect screens, so it must not trigger the
         // system permission prompt.
         profile.notificationsEnabled = false
         profiles.save()
