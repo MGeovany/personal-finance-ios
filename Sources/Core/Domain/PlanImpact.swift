@@ -1,7 +1,7 @@
 import Foundation
 
-/// The difference one decision makes. This is the app's core sentence: "esto
-/// mueve tu fecha X días".
+/// The difference one decision makes. This is the app's core sentence: "this
+/// moves your date by X days".
 struct PlanImpact: Equatable, Sendable {
     let baselineDate: Date?
     let newDate: Date?

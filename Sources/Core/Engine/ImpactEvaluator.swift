@@ -2,8 +2,8 @@ import Foundation
 
 /// Builds both plans and subtracts them.
 ///
-/// This is the single place the app's central sentence comes from — "esto mueve
-/// tu fecha X días" — so every screen that shows a consequence, from the expense
+/// This is the single place the app's central sentence comes from — "this moves
+/// your date by X days" — so every screen showing a consequence, from the expense
 /// sheet to the subscription list, gets the same number by the same route.
 struct ImpactEvaluator: ImpactEvaluating {
     private let planBuilding: PlanBuilding

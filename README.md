@@ -1,97 +1,127 @@
 # Cero
 
-Aplicación iOS de finanzas personales enfocada en un solo objetivo: **quedar libre de deudas**.
+An iOS personal finance app built around a single goal: **getting out of debt**.
 
-Cero no es una hoja de cálculo. Al abrirla responde cinco preguntas:
+Cero is not a spreadsheet. Opening it answers five questions:
 
-1. ¿Cuánto debo?
-2. ¿Cuánto puedo gastar esta semana?
-3. ¿Qué debo pagar ahora?
-4. ¿Cuándo quedaré libre de deudas?
-5. ¿Qué está retrasando mi progreso?
+1. How much do I owe?
+2. How much can I spend this week?
+3. What should I pay now?
+4. When could I be debt free?
+5. What is slowing me down?
 
-> El nombre del repositorio es provisional y se cambiará más adelante.
+> The repository name is provisional and will be changed later.
+
+## Language convention
+
+All documentation, code, comments and commit messages are in **English**. Only the
+text the user actually sees on screen is in **Spanish** — and that copy lives in the
+presentation layer (`Core/Format` and the feature views), never in the engine.
 
 ## Stack
 
 - SwiftUI (iOS 18+), Swift
-- SwiftData para persistencia local, sin backend ni login
-- XcodeGen: el proyecto se genera desde `project.yml`
+- SwiftData for local persistence — no backend, no login
+- XcodeGen: the project is generated from `project.yml`
 
-## Cómo correrlo
+## Running it
 
 ```bash
-make open     # genera Cero.xcodeproj y lo abre en Xcode
-make build    # compila para el simulador
-make run      # compila, instala y abre en el simulador
-make mock     # igual, cargando el usuario de prueba guardado
-make erase    # desinstala la app: el próximo arranque empieza en la configuración
+make open     # generates Cero.xcodeproj and opens it in Xcode
+make build    # builds for the simulator
+make run      # builds, installs and launches on the booted simulator
+make mock     # same, loading the saved sample user
+make erase    # uninstalls the app, so the next launch starts at setup
 ```
 
-La app arranca **vacía**: el primer lanzamiento entra a la configuración inicial y
-los datos son los que tú escribas.
+`Cero.xcodeproj` is not versioned: regenerate it with `xcodegen generate`.
 
-Hay un **usuario de prueba** guardado (`MockUser`) con un caso realista: ingreso de
-L45,000, tres deudas por L175,500, servicios, suscripciones, una meta y varios días
-de gastos. Nunca se carga solo — hay que pedirlo, con `make mock` (que pasa
-`CERO_MOCK_USER=1`) o desde **Ajustes › Desarrollo** en compilaciones de debug. Solo
-entra en una app vacía, así que no puede sobrescribir lo que tú capturaste.
+### Starting state
 
-Esa misma sección tiene **Borrar todos mis datos**, que vacía el almacén y te
-devuelve a la configuración inicial.
+The app starts **empty**. The first launch goes to setup and the data is whatever
+the user enters.
 
-`Cero.xcodeproj` no se versiona: se regenera con `xcodegen generate`.
+A **sample user** (`MockUser`) is saved alongside it: L45,000 of income, three debts
+totalling L175,500, utilities, subscriptions, a goal and a few days of spending. It
+never loads on its own — it has to be asked for, either with `make mock` (which
+passes `CERO_MOCK_USER=1`) or from **Ajustes › Desarrollo** in debug builds. It only
+loads into an empty store, so it can never overwrite real entries.
 
-## Arquitectura
+That same section has **Borrar todos mis datos**, which empties the store and returns
+to setup.
 
-Cuatro capas, con dependencias siempre hacia abajo. Cada capa se comunica con la
-siguiente mediante protocolos, y cada archivo tiene una sola responsabilidad.
+## Architecture
+
+Four layers, dependencies always pointing downward. Each layer talks to the next
+through protocols, and each file has one responsibility.
 
 ```
 Sources/
-  App/         Punto de entrada, composición de dependencias, navegación raíz
-  Features/    Una carpeta por pantalla: vista + view model + subvistas
+  App/         Entry point, dependency composition, top-level routing
+  Features/    One folder per screen: view + view model + subviews
   Core/
-    Design/    Sistema de diseño: paleta, tipografía, componentes reutilizables
-    Store/     SwiftData: entidades, repositorios y ensamblado del snapshot
-    Engine/    Motor de planificación (puro, sin UI ni persistencia)
-    Domain/    Tipos de valor puros, sin dependencias
+    Design/    Design system: palette, typography, reusable components
+    Format/    Spanish wording and number/date formatting
+    Store/     SwiftData: entities, repositories, snapshot assembly
+    Notifications/  What is worth notifying, and how it is delivered
+    Engine/    Planning engine (pure — no UI, no persistence)
+    Domain/    Pure value types, no dependencies
 ```
 
-### El motor
+### The engine
 
-`Domain` y `Engine` no importan SwiftUI ni SwiftData: son Swift puro y por eso se
-pueden probar sin simulador. El motor toma un `FinancialSnapshot` (retrato
-inmutable de las finanzas del usuario) y produce un `FinancialPlan`.
+`Domain` and `Engine` import neither SwiftUI nor SwiftData: they are plain Swift and
+carry no language, which is what makes them verifiable without a simulator. The
+engine takes a `FinancialSnapshot` (an immutable picture of the user's finances) and
+produces a `FinancialPlan`.
 
-Cada paso del cálculo es un objeto pequeño detrás de un protocolo:
+Each step of the calculation is a small object behind a protocol:
 
-| Protocolo | Responsabilidad |
+| Protocol | Responsibility |
 |---|---|
-| `CashFlowCalculating` | Ingresos menos compromisos obligatorios: cuánto queda realmente |
-| `EmergencyFundAdvising` | Fondo de emergencia recomendado y aporte mensual |
-| `LifestyleBudgeting` | Presupuestos por categoría, respetando pisos realistas |
-| `SurplusAllocating` | Reparto del excedente entre deuda, imprevistos, metas y margen |
-| `DebtPrioritizing` | Orden de ataque: avalancha, bola de nieve o personalizado |
-| `DebtProjecting` | Simulación mes por mes: fecha libre de deuda e intereses |
-| `PlanBuilding` | Compone lo anterior en un plan completo |
-| `PlanSetBuilding` | Construye los tres planes comparables |
-| `TargetDateSolving` | ¿Es posible tu fecha objetivo? ¿A qué costo? |
-| `ImpactEvaluating` | Cuántos días mueve tu fecha una decisión concreta |
-| `ScenarioApplying` | Aplica una decisión hipotética al snapshot sin tocar datos reales |
-| `WeeklyBudgetSplitting` | Reparte el presupuesto mensual en semanas exactas |
-| `GroceryBudgetSplitting` | Divide el supermercado en compra principal y reposiciones |
+| `CashFlowCalculating` | Income minus every unavoidable commitment: what is really left |
+| `EmergencyFundAdvising` | Recommended cushion, monthly contribution, savings worth spending |
+| `LifestyleBudgeting` | Per-category budgets, respecting realistic floors |
+| `SurplusAllocating` | Splits the surplus between debt, buffer, goals and free margin |
+| `DebtPrioritizing` | Attack order: avalanche, snowball or custom |
+| `DebtProjecting` | Month-by-month simulation: freedom date and total interest |
+| `PlanBuilding` | Composes the above into a complete plan |
+| `PlanSetBuilding` | Builds the three comparable plans |
+| `TargetDateSolving` | Is your target date possible, and at what cost? |
+| `ImpactEvaluating` | How many days a concrete decision moves your date |
+| `ScenarioApplying` | Applies a hypothetical decision without touching real data |
+| `WeeklyBudgetSplitting` | Cuts the monthly budget into weeks that sum back exactly |
+| `GroceryBudgetSplitting` | Splits groceries into a main run and weekly top-ups |
 
-Añadir una estrategia de pago o una velocidad de plan nueva significa añadir un
-tipo, no editar los existentes.
+Adding a payoff strategy or a plan speed means adding a type, not editing the
+existing ones.
 
-### Las tres velocidades
+### Two engine behaviours the app depends on
 
-`Suelto`, `Balanceado` (recomendado) y `Agresivo` son un mismo algoritmo con
-distintos parámetros (`PlanTuning`): cuánto se recorta el estilo de vida, cuánto
-del excedente va a deuda, qué tan grande es el colchón y si las metas
-secundarias siguen avanzando. Los nombres son editables.
+- **Rollover.** The monthly outlay stays constant. When a debt clears, its minimum
+  keeps being paid — into the next debt in line. The user never redirects anything
+  by hand.
+- **Day-level dates.** Money is assumed to arrive evenly through the month, so a
+  payoff date lands on a day rather than a month boundary. That is what makes
+  "this brings your date nine days closer" a real number instead of a jump between
+  whole months.
 
-Ninguna velocidad puede recomendar un presupuesto imposible: cada categoría tiene
-un piso proporcional a lo que el usuario declaró, y las esenciales (supermercado,
-transporte) se recortan mucho menos que las flexibles.
+### The three speeds
+
+`Suelto`, `Balanceado` (recommended) and `Agresivo` are one algorithm with different
+parameters (`PlanTuning`): how much lifestyle is trimmed, how much of the surplus
+goes to debt, how large the buffer is, and whether secondary goals keep moving. The
+names are editable.
+
+No speed can recommend an impossible budget: every category has a floor proportional
+to what the user declared, and essentials (groceries, transport) are cut far less
+than discretionary spending. A category the user consistently overspends is treated
+as under-budgeted rather than as a discipline problem, and the app offers to raise it.
+
+### State and recalculation
+
+`PlanStore` holds the single plan the whole app reads. Features mutate their own
+repository and then ask for a recalculation, so no screen can display a number that
+no longer follows from the data. `SnapshotAssembler` is the only seam between
+storage and calculation — every amount is converted to the user's main currency
+there, before the engine sees it.

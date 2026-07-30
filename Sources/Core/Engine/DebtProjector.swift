@@ -9,7 +9,7 @@ import Foundation
 ///   redirect anything by hand.
 /// - **Day-level dates.** Money is assumed to arrive evenly through the month, so
 ///   the payoff date lands on a day rather than a month boundary. That is what
-///   makes "esto adelanta tu fecha nueve días" a real number instead of a jump
+///   makes "this brings your date nine days closer" a real number instead of a jump
 ///   between whole months.
 struct DebtProjector: DebtProjecting {
     private let prioritizerFactory: DebtPrioritizerFactory

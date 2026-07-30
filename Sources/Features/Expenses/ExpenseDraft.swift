@@ -3,7 +3,7 @@ import Foundation
 /// An expense being entered.
 ///
 /// The backing is derived rather than asked for directly: the user answers
-/// "¿ya tienes el dinero?" and this turns that answer into the accounting
+/// "do you already have the money for this?" and this turns that answer into the
 /// consequence.
 struct ExpenseDraft: Equatable {
     var amount: Money = 0
