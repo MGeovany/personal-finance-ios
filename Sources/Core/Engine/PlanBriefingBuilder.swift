@@ -33,8 +33,32 @@ struct PlanBriefingBuilder: PlanBriefingBuilding {
             outings: weekends(in: plan, from: snapshot.referenceDate),
             unexpected: plan.allocation.buffer,
             priority: payments(in: plan, snapshot: snapshot).first { $0.isPriority },
-            payments: payments(in: plan, snapshot: snapshot)
+            payments: payments(in: plan, snapshot: snapshot),
+            transfers: transfers(in: plan)
         )
+    }
+
+    // MARK: - Savings
+
+    /// The cushion first, then each goal the plan is actually funding this month.
+    ///
+    /// A goal the plan paused is left out rather than listed at zero: the payday card is
+    /// a list of things to do, and there is nothing to do for a paused goal.
+    private func transfers(in plan: FinancialPlan) -> [PlanBriefing.SavingsTransfer] {
+        let cushion = plan.emergency.monthlyContribution > 0
+            ? [PlanBriefing.SavingsTransfer(destination: .emergencyFund, monthly: plan.emergency.monthlyContribution)]
+            : []
+
+        let goals = plan.goalImpacts
+            .filter { $0.fundedMonthly > 0 }
+            .map { impact in
+                PlanBriefing.SavingsTransfer(
+                    destination: .goal(id: impact.goalID, name: impact.goalName),
+                    monthly: impact.fundedMonthly
+                )
+            }
+
+        return cushion + goals
     }
 
     // MARK: - Delivery

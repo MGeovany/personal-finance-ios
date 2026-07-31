@@ -89,7 +89,16 @@ struct ProfileSettingsService: PlanPreferencing {
     }
 
     func completeOnboarding() {
-        update { $0.hasCompletedOnboarding = true }
+        // The starting line is stamped once. Re-running setup on an existing store would
+        // otherwise reset the baseline and erase whatever progress had been made.
+        let debtNow = planStore.snapshot.totalDebt
+        update { profile in
+            profile.hasCompletedOnboarding = true
+            if profile.planStartedAt == nil {
+                profile.planStartedAt = Date()
+                profile.debtAtPlanStart = debtNow
+            }
+        }
     }
 
     /// Every change lands in storage and immediately recalculates the plan, so no

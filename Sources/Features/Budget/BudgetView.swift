@@ -130,11 +130,18 @@ struct BudgetView: View {
                     } label: {
                         LabeledProgress(
                             title: consumption.categoryName,
-                            leadingValue: remainingLabel(for: consumption),
-                            trailingValue: caption(for: consumption),
+                            leadingValue: dependencies.money.string(consumption.budget, currency: model.currency),
+                            trailingValue: usedCaption(for: consumption),
+                            detail: remainingCaption(for: consumption),
+                            detailTint: consumption.isOverBudget ? Palette.critical : Palette.tertiaryText,
                             fraction: consumption.usedFraction,
                             tint: tint(for: consumption),
-                            icon: consumption.icon
+                            icon: consumption.icon,
+                            // Card padding plus the screen gutter, so the red bar
+                            // breaks out of the card and meets the screen edge.
+                            trailingBleed: consumption.isOverBudget
+                                ? Layout.cardPadding + DesignSystem.Space.xxl
+                                : 0
                         )
                     }
                     .buttonStyle(.plain)
@@ -151,35 +158,22 @@ struct BudgetView: View {
 
     // MARK: - Helpers
 
-    private func remainingLabel(for consumption: BudgetConsumption) -> String {
-        if consumption.isOverBudget {
-            return "Sin cupo"
-        }
-        return "Te quedan \(dependencies.money.string(consumption.remaining, currency: model.currency))"
+    private func usedCaption(for consumption: BudgetConsumption) -> String {
+        "Has usado \(dependencies.money.string(consumption.spent, currency: model.currency))."
     }
 
-    private func caption(for consumption: BudgetConsumption) -> String {
-        let spent = dependencies.money.string(consumption.spent, currency: model.currency)
-        let budget = dependencies.money.string(consumption.budget, currency: model.currency)
-
+    /// Hidden when nothing was spent: remaining then equals the total above.
+    private func remainingCaption(for consumption: BudgetConsumption) -> String? {
+        guard consumption.spent > 0 else { return nil }
         if consumption.isOverBudget {
-            return "Ya usaste \(spent). Tu cupo del mes era \(budget)"
+            let over = dependencies.money.string(consumption.overspent, currency: model.currency)
+            return "Te saliste -\(over) del presupuesto"
         }
-
-        let used = "Usaste \(spent) de tu cupo de \(budget)"
-
-        // Super in monthly mode is one pot for the month; a weekly split would
-        // contradict the mode the user just picked.
-        if consumption.categoryKey == CategoryKeys.groceries, model.grocery.mode == .monthly {
-            return used
-        }
-
-        let weekly = dependencies.money.string(consumption.budget / max(1, model.weeks.count), currency: model.currency)
-        return "\(used) · unos \(weekly) por semana"
+        return "Restante \(dependencies.money.string(consumption.remaining, currency: model.currency))"
     }
 
     private func tint(for consumption: BudgetConsumption) -> Color {
-        if consumption.isOverBudget { return Palette.caution }
+        if consumption.isOverBudget { return Palette.critical }
         if consumption.isNearLimit { return Palette.caution }
         return Palette.accent
     }

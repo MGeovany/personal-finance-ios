@@ -6,11 +6,18 @@ import Observation
 @Observable
 final class GoalsViewModel {
     private let goals: GoalRepositing
+    private let savings: SavingsRepositing
     private let planStore: PlanStore
     private let dateProvider: DateProviding
 
-    init(goals: GoalRepositing, planStore: PlanStore, dateProvider: DateProviding = SystemDateProvider()) {
+    init(
+        goals: GoalRepositing,
+        savings: SavingsRepositing,
+        planStore: PlanStore,
+        dateProvider: DateProviding = SystemDateProvider()
+    ) {
         self.goals = goals
+        self.savings = savings
         self.planStore = planStore
         self.dateProvider = dateProvider
     }
@@ -60,7 +67,9 @@ final class GoalsViewModel {
     }
 
     func contribute(_ amount: Money, to goal: GoalEntity) {
-        goals.contribute(amount, to: goal, on: dateProvider.now)
+        // Through the savings ledger rather than the goal repository, so the transfer is
+        // dated and the payday card can see it happened.
+        savings.contribute(amount, to: goal, on: dateProvider.now, note: "")
         planStore.refresh()
     }
 }

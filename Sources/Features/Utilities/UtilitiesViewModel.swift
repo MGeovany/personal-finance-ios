@@ -7,6 +7,7 @@ import Observation
 final class UtilitiesViewModel {
     private let utilities: UtilityRepositing
     private let debts: DebtRepositing
+    private let savings: SavingsRepositing
     private let profiles: ProfileProviding
     private let planStore: PlanStore
     private let monthKeys: MonthKeyFormatter
@@ -15,6 +16,7 @@ final class UtilitiesViewModel {
     init(
         utilities: UtilityRepositing,
         debts: DebtRepositing,
+        savings: SavingsRepositing,
         profiles: ProfileProviding,
         planStore: PlanStore,
         monthKeys: MonthKeyFormatter = MonthKeyFormatter(),
@@ -22,6 +24,7 @@ final class UtilitiesViewModel {
     ) {
         self.utilities = utilities
         self.debts = debts
+        self.savings = savings
         self.profiles = profiles
         self.planStore = planStore
         self.monthKeys = monthKeys
@@ -85,9 +88,7 @@ final class UtilitiesViewModel {
             debts.registerPayment(amount, on: debt, date: now, note: "Sobrante de servicios", wasRecommended: false)
 
         case .emergencyFund:
-            let profile = profiles.profile()
-            profile.emergencyFund += amount
-            profiles.save()
+            savings.contributeToEmergencyFund(amount, on: now, note: "Sobrante de servicios")
 
         // Goals are funded from the goals screen, where the user picks which one;
         // carry-over simply stays in the month's free margin.

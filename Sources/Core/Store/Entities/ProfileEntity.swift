@@ -28,6 +28,13 @@ final class ProfileEntity {
     var planNamesRaw: [String: String]
     var createdAt: Date
 
+    /// When setup was finished, and what was owed at that moment.
+    ///
+    /// The baseline the progress screen measures against. Without them it can only report
+    /// what has been paid, not how far that has moved the total.
+    var planStartedAt: Date?
+    var debtAtPlanStart: Money?
+
     /// When the money arrives, which is when the app asks for the abonos. Optional
     /// because the app has to work for somebody who skipped the question, and because
     /// stores written before this existed will not have it.

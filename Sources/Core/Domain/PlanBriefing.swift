@@ -20,6 +20,30 @@ struct PlanBriefing: Equatable, Sendable {
     let priority: DebtPayment?
     /// Every debt with what it receives this month, priority one first.
     let payments: [DebtPayment]
+    /// Money that leaves for savings rather than for a card, named. The cushion and each
+    /// funded goal are separate destinations and the user has to be told which is which:
+    /// "a tu ahorro" next to one number reads as whichever of them they had in mind.
+    let transfers: [SavingsTransfer]
+
+    /// One transfer the plan asks for this month.
+    struct SavingsTransfer: Identifiable, Equatable, Sendable {
+        /// Where it goes. A goal carries its own name, which the user wrote, so no part
+        /// of the app has to invent a label for it.
+        enum Destination: Equatable, Sendable {
+            case emergencyFund
+            case goal(id: UUID, name: String)
+        }
+
+        let destination: Destination
+        let monthly: Money
+
+        var id: String {
+            switch destination {
+            case .emergencyFund: "emergency"
+            case .goal(let id, _): "goal-\(id)"
+            }
+        }
+    }
 
     /// A budget expressed as a number of orders, which is how delivery is decided.
     struct OrderAllowance: Equatable, Sendable {

@@ -164,7 +164,13 @@ struct PlanBriefingPresenter: Sendable {
         }
     }
 
-    private func format(_ amount: Money) -> String {
-        money.string(amount, currency: currency)
+    private func format(_ value: Money) -> String {
+        amount(value)
+    }
+
+    /// Formatting an amount is needed by the payday instructions too, which are built in
+    /// an extension, so this one is not private.
+    func amount(_ value: Money) -> String {
+        money.string(value, currency: currency)
     }
 }

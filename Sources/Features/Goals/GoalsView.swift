@@ -11,7 +11,11 @@ struct GoalsView: View {
     init(dependencies: AppDependencies) {
         self.dependencies = dependencies
         self._model = State(
-            initialValue: GoalsViewModel(goals: dependencies.goals, planStore: dependencies.planStore)
+            initialValue: GoalsViewModel(
+                goals: dependencies.goals,
+                savings: dependencies.savings,
+                planStore: dependencies.planStore
+            )
         )
     }
 

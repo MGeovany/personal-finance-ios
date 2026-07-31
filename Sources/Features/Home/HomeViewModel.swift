@@ -69,11 +69,16 @@ final class HomeViewModel {
     /// weekly status.
     var showsPaydayBanner: Bool { paydayStatus.deservesTheTopOfTheScreen }
 
-    /// What the plan asks the user to move into savings this month, shown alongside the
-    /// card payments because the reminder covers both.
-    var savingsContribution: Money? {
-        let amount = plan.emergency.monthlyContribution
-        return amount > 0 ? amount : nil
+    /// Hidden while the payday card is still asking for the abonos.
+    ///
+    /// Showing somebody what they have left to spend, on the day the money is supposed
+    /// to leave for their cards, is the app arguing against its own plan. It comes back
+    /// as soon as an abono is registered.
+    var showsWeeklyStatus: Bool { !showsPaydayBanner }
+
+    /// Everything the plan asks the user to move this payday, each marked done or not.
+    var paydayInstructions: [PaydayInstruction] {
+        briefingPresenter.instructions(briefingProvider.briefing, progress: paydayStatus.progress)
     }
 
     var briefingPaymentRows: [(payment: PlanBriefing.DebtPayment, value: String, detail: String)] {

@@ -20,6 +20,7 @@ struct MockUser {
     private let categories: CategoryRepositing
     private let goals: GoalRepositing
     private let expenses: ExpenseRepositing
+    private let savings: SavingsRepositing
     private let planStore: PlanStore
 
     /// Whether this launch asked for the sample user.
@@ -36,6 +37,7 @@ struct MockUser {
         categories: CategoryRepositing,
         goals: GoalRepositing,
         expenses: ExpenseRepositing,
+        savings: SavingsRepositing,
         planStore: PlanStore
     ) {
         self.profiles = profiles
@@ -46,6 +48,7 @@ struct MockUser {
         self.categories = categories
         self.goals = goals
         self.expenses = expenses
+        self.savings = savings
         self.planStore = planStore
     }
 
@@ -60,6 +63,7 @@ struct MockUser {
         seedBaselines()
         seedGoal()
         seedRecentExpenses(now: now)
+        seedHistory(now: now)
 
         planStore.refresh()
     }
@@ -71,9 +75,16 @@ struct MockUser {
         profile.displayName = "Ana"
         profile.currency = .hnl
         profile.primaryIncome = 45_000
-        profile.emergencyFund = 8_000
+        profile.emergencyFund = 6_100
         profile.savings = 25_000
         profile.groceryMode = .hybrid
+        // Paid on the 15th and the last day, which is what "quincenal" means here and
+        // what most salaried people in Honduras are on.
+        profile.paydaySchedule = .semimonthlyDefault
+        // Six weeks in, with the debt it started at, so the progress screen has a
+        // baseline to measure against.
+        profile.planStartedAt = Calendar.current.date(byAdding: .day, value: -42, to: Date())
+        profile.debtAtPlanStart = 189_000
         profile.hasCompletedOnboarding = true
         // The sample user exists to inspect screens, so it must not trigger the
         // system permission prompt.
@@ -106,7 +117,7 @@ struct MockUser {
                 name: "BAC Visa Signature",
                 institution: "BAC",
                 kind: .creditCard,
-                balance: 62_000,
+                balance: 69_000,
                 creditLimit: 80_000,
                 annualRate: 0.48,
                 minimumPayment: 3_100,
@@ -119,7 +130,7 @@ struct MockUser {
                 name: "Ficohsa Visa Gold",
                 institution: "Ficohsa",
                 kind: .creditCard,
-                balance: 18_500,
+                balance: 20_000,
                 creditLimit: 30_000,
                 annualRate: 0.32,
                 minimumPayment: 950,
@@ -132,7 +143,7 @@ struct MockUser {
                 name: "Préstamo carro",
                 institution: "Atlántida",
                 kind: .carLoan,
-                balance: 95_000,
+                balance: 100_000,
                 annualRate: 0.14,
                 minimumPayment: 4_200,
                 dueDay: 20
@@ -162,11 +173,43 @@ struct MockUser {
                 name: "Viaje",
                 icon: "airplane",
                 targetAmount: 40_000,
-                savedAmount: 5_000,
+                savedAmount: 3_000,
                 requestedMonthly: 4_000,
                 mode: .parallel
             )
         )
+    }
+
+    /// Six weeks of abonos, so the progress screen has something to measure.
+    ///
+    /// Registered through the repositories rather than written as totals, which is what
+    /// makes the balances land on today's figures and the dated ledgers agree with them.
+    private func seedHistory(now: Date) {
+        let calendar = Calendar.current
+        let all = debts.all()
+
+        let payments: [(name: String, days: Int, amount: Money)] = [
+            ("BAC Visa Signature", 38, 3_500),
+            ("BAC Visa Signature", 8, 3_500),
+            ("Ficohsa Visa Gold", 38, 1_500),
+            ("Préstamo carro", 23, 5_000),
+        ]
+
+        for payment in payments {
+            guard let debt = all.first(where: { $0.name == payment.name }) else { continue }
+            debts.registerPayment(
+                payment.amount,
+                on: debt,
+                date: calendar.addingDays(-payment.days, to: now),
+                note: "",
+                wasRecommended: true
+            )
+        }
+
+        savings.contributeToEmergencyFund(1_900, on: calendar.addingDays(-38, to: now), note: "")
+        if let goal = goals.all().first {
+            savings.contribute(2_000, to: goal, on: calendar.addingDays(-23, to: now), note: "")
+        }
     }
 
     /// A few days of spending, so budgets show progress rather than untouched bars.

@@ -19,6 +19,7 @@ enum ModelSchema {
         ExpenseEntity.self,
         GoalEntity.self,
         ReviewLogEntity.self,
+        SavingsContributionEntity.self,
     ]
 
     static var schema: Schema { Schema(entities) }

@@ -14,6 +14,7 @@ struct UtilitiesView: View {
             initialValue: UtilitiesViewModel(
                 utilities: dependencies.utilities,
                 debts: dependencies.debts,
+                savings: dependencies.savings,
                 profiles: dependencies.profiles,
                 planStore: dependencies.planStore
             )

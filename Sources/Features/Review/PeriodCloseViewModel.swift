@@ -11,6 +11,7 @@ final class PeriodCloseViewModel {
     private let expenses: ExpenseRepositing
     private let debts: DebtRepositing
     private let goals: GoalRepositing
+    private let savings: SavingsRepositing
     private let profiles: ProfileProviding
     private let reviews: ReviewRepositing
     private let progress: BudgetProgressCalculating
@@ -24,6 +25,7 @@ final class PeriodCloseViewModel {
         kind: ReviewKind,
         expenses: ExpenseRepositing,
         debts: DebtRepositing,
+        savings: SavingsRepositing,
         goals: GoalRepositing,
         profiles: ProfileProviding,
         reviews: ReviewRepositing,
@@ -34,6 +36,7 @@ final class PeriodCloseViewModel {
         self.kind = kind
         self.expenses = expenses
         self.debts = debts
+        self.savings = savings
         self.goals = goals
         self.profiles = profiles
         self.reviews = reviews
@@ -133,13 +136,11 @@ final class PeriodCloseViewModel {
             debts.registerPayment(surplus, on: debt, date: now, note: "Sobrante del cierre", wasRecommended: false)
 
         case .emergencyFund:
-            let profile = profiles.profile()
-            profile.emergencyFund += surplus
-            profiles.save()
+            savings.contributeToEmergencyFund(surplus, on: now, note: "Sobrante del cierre")
 
         case .goal:
             guard let goal = goals.active().first else { return }
-            goals.contribute(surplus, to: goal, on: now)
+            savings.contribute(surplus, to: goal, on: now, note: "Sobrante del cierre")
 
         // Carrying over means leaving it exactly where it is.
         case .carryOver:

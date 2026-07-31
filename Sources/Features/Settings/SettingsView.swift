@@ -68,6 +68,15 @@ struct SettingsView: View {
     private var toolsSection: some View {
         CardSection(header: "Herramientas") {
             NavigationLink {
+                PlanProgressScreen(dependencies: dependencies)
+            } label: {
+                NavRow(title: "Tu progreso", icon: "chart.line.uptrend.xyaxis")
+            }
+            .buttonStyle(.plain)
+
+            RowDivider()
+
+            NavigationLink {
                 SimulatorView(dependencies: dependencies)
             } label: {
                 NavRow(title: "¿Qué pasa si...?", icon: "wand.and.stars")

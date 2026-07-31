@@ -23,6 +23,7 @@ final class AppDependencies {
     let goals: GoalRepositing
     let expenses: ExpenseRepositing
     let reviews: ReviewRepositing
+    let savings: SavingsRepositing
 
     let planStore: PlanStore
     let preferences: PlanPreferencing
@@ -65,6 +66,7 @@ final class AppDependencies {
         self.debts = DebtRepository(context: context)
         self.goals = GoalRepository(context: context)
         self.reviews = ReviewRepository(context: context)
+        self.savings = SavingsRepository(context: context, profiles: profiles)
         self.notifications = notifications
 
         let assembler = SnapshotAssembler(
@@ -125,10 +127,37 @@ final class AppDependencies {
         PlanBriefingPresenter(money: money, dates: dates, currency: currency)
     }
 
+    /// One history, merged from the expense, payment and savings ledgers.
+    var activityFeed: ActivityFeedProviding {
+        ActivityFeedProvider(
+            expenses: expenses,
+            debts: debts,
+            savings: savings,
+            goals: goals,
+            categories: categories,
+            profiles: profiles
+        )
+    }
+
+    /// How the plan is actually going, measured against the day it started.
+    var planProgress: PlanProgressProviding {
+        PlanProgressProvider(
+            profiles: profiles,
+            debts: debts,
+            savings: savings,
+            planStore: planStore
+        )
+    }
+
     /// Where the user stands relative to their payday, which decides what the dashboard
     /// leads with and which reminders are worth sending.
     var paydayStatus: PaydayStatusProviding {
-        PaydayStatusProvider(profiles: profiles, debts: debts)
+        PaydayStatusProvider(
+            profiles: profiles,
+            debts: debts,
+            savings: savings,
+            briefings: briefingProvider
+        )
     }
 
     /// Rebuilds every pending reminder from the plan as it stands.
@@ -194,6 +223,7 @@ final class AppDependencies {
             categories: categories,
             goals: goals,
             expenses: expenses,
+            savings: savings,
             planStore: planStore
         )
         .loadIfStoreIsEmpty()

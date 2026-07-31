@@ -10,7 +10,7 @@ struct HomeView: View {
     @State private var route: Route?
 
     private enum Route: Identifiable, Hashable {
-        case registerPayment, dailyReview, briefing
+        case registerPayment, registerAbonos, dailyReview, briefing
         /// The screen where a specific number can be changed. Opened from the briefing
         /// rows, so "no me alcanza" leads somewhere instead of just being read.
         case budget, strategy
@@ -33,27 +33,28 @@ struct HomeView: View {
                 if model.showsPaydayBanner {
                     PaydayBanner(
                         status: model.paydayStatus,
-                        payments: model.briefingPaymentRows,
-                        savingsContribution: model.savingsContribution,
+                        instructions: model.paydayInstructions,
                         money: dependencies.money,
                         dates: dependencies.dates,
                         currency: model.currency,
-                        onRegister: { route = .registerPayment }
+                        onRegister: { route = .registerAbonos }
                     )
                 }
 
-                WeeklyStatusCard(
-                    week: model.weekBudget,
-                    month: model.monthBudget,
-                    days: model.weekDays,
-                    deliveryOrdersUsed: model.deliveryOrdersUsed,
-                    deliveryOrdersAllowed: model.deliveryOrdersAllowed,
-                    outingsSpent: model.outingsMonthSpent,
-                    outingsBudget: model.outingsMonthBudget,
-                    spentToday: model.spentToday,
-                    money: dependencies.money,
-                    currency: model.currency
-                )
+                if model.showsWeeklyStatus {
+                    WeeklyStatusCard(
+                        week: model.weekBudget,
+                        month: model.monthBudget,
+                        days: model.weekDays,
+                        deliveryOrdersUsed: model.deliveryOrdersUsed,
+                        deliveryOrdersAllowed: model.deliveryOrdersAllowed,
+                        outingsSpent: model.outingsMonthSpent,
+                        outingsBudget: model.outingsMonthBudget,
+                        spentToday: model.spentToday,
+                        money: dependencies.money,
+                        currency: model.currency
+                    )
+                }
 
                 PlanBriefingSection(
                     items: model.briefingItems,
@@ -95,7 +96,7 @@ struct HomeView: View {
             // Coming back from registering a payment changes whether the payday nudges
             // are still needed, and those are booked per day rather than repeating, so
             // they have to be rebuilt rather than left to expire.
-            guard previous == .registerPayment, current == nil else { return }
+            guard current == nil, previous == .registerPayment || previous == .registerAbonos else { return }
             model.refresh()
             Task { await dependencies.refreshReminders() }
         }
@@ -284,6 +285,8 @@ struct HomeView: View {
         switch destination {
         case .registerPayment:
             RegisterPaymentSheet(dependencies: dependencies)
+        case .registerAbonos:
+            RegisterAbonoSheet(dependencies: dependencies, instructions: model.paydayInstructions)
         case .dailyReview:
             DailyReviewSheet(dependencies: dependencies)
         case .briefing:

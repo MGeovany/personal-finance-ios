@@ -94,7 +94,11 @@ struct NotificationContentBuilder: Sendable {
     /// booked one per day and thrown away the moment an abono is registered. The app
     /// rebuilds its reminders then, and these simply do not come back.
     private func missedAbonoNudges(_ payday: PaydayReminder) -> [PlannedNotification] {
-        guard case .pending(let since, let days) = payday.status else { return [] }
+        // Only when nothing at all has moved. Somebody who paid two of three cards is
+        // working through it and does not need an alarm every morning about the third.
+        guard case .pending(let since, let days, let progress) = payday.status,
+              !progress.hasStarted
+        else { return [] }
 
         let startingDay = max(days + 1, PaydayStatus.insistAfterDays)
         let dayCount = 5

@@ -144,6 +144,7 @@ extension PeriodCloseViewModel {
             kind: kind,
             expenses: dependencies.expenses,
             debts: dependencies.debts,
+            savings: dependencies.savings,
             goals: dependencies.goals,
             profiles: dependencies.profiles,
             reviews: dependencies.reviews,
