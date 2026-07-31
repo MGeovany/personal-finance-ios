@@ -73,9 +73,6 @@ struct ModalScaffold<Content: View>: View {
                 }
             }
             .padding(.horizontal, DesignSystem.Space.xl)
-            .padding(.vertical, DesignSystem.Space.s)
-            .background(Palette.surface, in: Capsule())
-            .softShadow(.raised)
 
             if showsClose {
                 HStack {

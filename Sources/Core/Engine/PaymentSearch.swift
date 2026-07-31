@@ -2,7 +2,7 @@ import Foundation
 
 /// Finds the smallest payment that reaches a goal, by bisection.
 ///
-/// Every projection is monotonic — paying more never delays the payoff — so
+/// Every projection is monotonic. Paying more never delays the payoff. So
 /// bisection is both valid and cheap, and it is the reason the app can answer
 /// "what would I need to pay to finish in December?" instantly.
 struct PaymentSearch: Sendable {

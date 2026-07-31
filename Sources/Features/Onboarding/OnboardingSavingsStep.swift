@@ -4,7 +4,7 @@ import SwiftUI
 ///
 /// One question instead of the two the app actually needs. Asking separately for an
 /// emergency fund and for other savings assumes the user has already divided their
-/// money that way, and most have not — they have one number. The split is made here,
+/// money that way, and most have not. They have one number. The split is made here,
 /// by treating the first three months of expenses as the cushion, and it is shown so
 /// nothing is decided behind their back.
 struct OnboardingSavingsStep: View {

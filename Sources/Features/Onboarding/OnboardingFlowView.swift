@@ -11,17 +11,20 @@ struct OnboardingFlowView: View {
     let dependencies: AppDependencies
 
     var body: some View {
-        VStack(spacing: 0) {
-            header
+        NavigationStack {
+            VStack(spacing: 0) {
+                header
 
-            question
-                .id(model.step)
-                .transition(slide)
+                question
+                    .id(model.step)
+                    .transition(slide)
 
-            footer
+                footer
+            }
+            .background(Palette.canvas)
+            .animation(DesignSystem.Motion.present, value: model.step)
+            .toolbar(.hidden, for: .navigationBar)
         }
-        .background(Palette.canvas)
-        .animation(DesignSystem.Motion.present, value: model.step)
     }
 
     // MARK: - Frame
@@ -59,23 +62,31 @@ struct OnboardingFlowView: View {
         }
     }
 
+    @ViewBuilder
     private var question: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: Layout.sectionGap) {
-                titleBlock
-                stepContent
+        if model.step == .welcome {
+            // Welcome owns the whole composition. Brand, line, breathing room . 
+            // so the shared title chrome would only duplicate it.
+            OnboardingWelcomeStep()
+                .padding(.horizontal, Layout.gutter)
+        } else {
+            ScrollView {
+                VStack(alignment: .leading, spacing: Layout.sectionGap) {
+                    titleBlock
+                    stepContent
+                }
+                .padding(.horizontal, Layout.gutter)
+                .padding(.bottom, Layout.sectionGap)
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .padding(.horizontal, Layout.gutter)
-            .padding(.bottom, Layout.sectionGap)
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .scrollDismissesKeyboard(.interactively)
         }
-        .scrollDismissesKeyboard(.interactively)
     }
 
     private var titleBlock: some View {
         VStack(alignment: .leading, spacing: Layout.gap) {
             Text(headline)
-                .font(model.step.isFirst ? Typography.hero : Typography.display(32, .displayBold))
+                .font(Typography.display(32, .displayBold))
                 .foregroundStyle(Palette.primaryText)
                 .fixedSize(horizontal: false, vertical: true)
 
@@ -86,7 +97,7 @@ struct OnboardingFlowView: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
-        .padding(.top, model.step.isFirst ? Layout.sectionGap * 2 : Layout.sectionGap)
+        .padding(.top, Layout.sectionGap)
         // The question arrives a beat before its answers, the same way a host
         // asks before offering the options.
         .transition(.opacity.combined(with: .offset(y: 8)))
@@ -105,7 +116,7 @@ struct OnboardingFlowView: View {
     private var stepContent: some View {
         switch model.step {
         case .welcome:
-            OnboardingWelcomeStep()
+            EmptyView()
         case .name:
             OnboardingNameStep(model: model)
         case .currency:

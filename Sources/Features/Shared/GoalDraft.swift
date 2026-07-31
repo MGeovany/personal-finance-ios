@@ -61,12 +61,13 @@ extension GoalDraft {
 
 /// The goal kinds the app suggests, each with an icon so the list reads quickly.
 enum GoalTemplate: String, CaseIterable, Identifiable {
-    case trip, car, emergency, computer, moving, education, event, purchase, custom
+    case debtFree, trip, car, emergency, computer, moving, education, event, purchase, custom
 
     var id: String { rawValue }
 
     var label: String {
         switch self {
+        case .debtFree: "Dejar en 0 mis deudas"
         case .trip: "Viaje"
         case .car: "Carro"
         case .emergency: "Fondo de emergencia"
@@ -81,6 +82,7 @@ enum GoalTemplate: String, CaseIterable, Identifiable {
 
     var icon: String {
         switch self {
+        case .debtFree: "equal.circle"
         case .trip: "airplane"
         case .car: "car"
         case .emergency: "shield"
@@ -90,6 +92,15 @@ enum GoalTemplate: String, CaseIterable, Identifiable {
         case .event: "calendar"
         case .purchase: "bag"
         case .custom: "target"
+        }
+    }
+
+    /// Debt freedom takes its target from what is owed; a trip asks for a typed
+    /// amount rather than a guessed band.
+    var usesAmountBands: Bool {
+        switch self {
+        case .debtFree, .trip: false
+        default: true
         }
     }
 }

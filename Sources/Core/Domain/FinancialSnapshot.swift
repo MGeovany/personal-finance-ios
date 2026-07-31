@@ -8,7 +8,7 @@ struct FinancialSnapshot: Equatable, Sendable {
     var currency: CurrencyCode
     var primaryIncome: Money
     var otherIncome: Money
-    /// Rent, school fees — obligations that are neither utilities nor debt.
+    /// Rent, school fees. Obligations that are neither utilities nor debt.
     var fixedExpenses: [RecurringCharge]
     /// Electricity, water, internet. Reserved separately, never mixed into the
     /// flexible budget.

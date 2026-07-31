@@ -2,7 +2,7 @@ import Foundation
 
 /// A committed monthly amount with a name: rent, electricity, a subscription.
 ///
-/// The engine does not care which of the three it is — only that it is owed
+/// The engine does not care which of the three it is. Only that it is owed
 /// before any money can be called available.
 struct RecurringCharge: Identifiable, Equatable, Sendable {
     let id: UUID

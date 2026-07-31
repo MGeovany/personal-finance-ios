@@ -5,7 +5,7 @@ import Foundation
 /// Two behaviours matter for the rest of the app:
 ///
 /// - **Rollover.** The monthly outlay stays constant. When a debt clears, its
-///   minimum keeps being paid — into the next debt in line. The user never has to
+///   minimum keeps being paid. Into the next debt in line. The user never has to
 ///   redirect anything by hand.
 /// - **Day-level dates.** Money is assumed to arrive evenly through the month, so
 ///   the payoff date lands on a day rather than a month boundary. That is what

@@ -3,7 +3,7 @@ import SwiftUI
 /// What the user pays every month, asked as a checklist.
 ///
 /// Showing the bills almost every household has turns recall into recognition.
-/// Amounts — and anything that was not on the list — are asked on the next step.
+/// Amounts. And anything that was not on the list. Are asked on the next step.
 struct OnboardingCommitmentsStep: View {
     @Bindable var model: OnboardingViewModel
 
@@ -43,11 +43,14 @@ struct OnboardingCommitmentsStep: View {
 ///
 /// Suggestions belong on lifestyle questions (transporte, salidas). A rent or a
 /// light bill is a number the user already knows, so the field is empty and waiting.
+/// Streaming is the exception: a single total is enough, or the user can name each
+/// service (Netflix, Disney+…) and the total is the sum.
 struct OnboardingCommitmentAmountsStep: View {
     @Bindable var model: OnboardingViewModel
 
     @Environment(\.moneyFormatter) private var money
-    @State private var editing: ChargeDraft?
+    @State private var editingCustom: ChargeDraft?
+    @State private var editingStreaming: ChargeDraft?
 
     var body: some View {
         VStack(alignment: .leading, spacing: Layout.sectionGap) {
@@ -58,20 +61,83 @@ struct OnboardingCommitmentAmountsStep: View {
                         ForEach(Array(rows.enumerated()), id: \.element) { index, template in
                             if index > 0 { RowDivider() }
 
-                            MoneyField(
-                                title: template.label,
-                                amount: Binding(
-                                    get: { model.amount(for: template) },
-                                    set: { model.setAmount($0, for: template) }
-                                ),
-                                currency: model.draft.currency
-                            )
+                            if template == .streaming {
+                                streamingAmount
+                            } else {
+                                MoneyField(
+                                    title: template.label,
+                                    amount: Binding(
+                                        get: { model.amount(for: template) },
+                                        set: { model.setAmount($0, for: template) }
+                                    ),
+                                    currency: model.draft.currency,
+                                    caption: template.amountCaption
+                                )
+                            }
                         }
                     }
                 }
             }
 
             custom
+        }
+        .sheet(item: $editingStreaming) { draft in
+            ChargeEditorSheet(purpose: .subscription, draft: draft, currencies: CurrencyCode.allCases) { saved in
+                model.addStreamingDetail(saved)
+            }
+        }
+    }
+
+    /// Total alone, or a named list. Whichever the user finds easier to recall.
+    private var streamingAmount: some View {
+        VStack(alignment: .leading, spacing: DesignSystem.Space.m) {
+            if model.draft.streamingDetails.isEmpty {
+                MoneyField(
+                    title: "Streaming",
+                    amount: Binding(
+                        get: { model.amount(for: .streaming) },
+                        set: { model.setAmount($0, for: .streaming) }
+                    ),
+                    currency: model.draft.currency,
+                    caption: "Puedes poner solo el total, o agregar cada servicio."
+                )
+            } else {
+                VStack(alignment: .leading, spacing: DesignSystem.Space.s) {
+                    HStack {
+                        Text("Streaming").fieldLabel()
+                        Spacer()
+                        Text(money.string(model.amount(for: .streaming), currency: model.draft.currency))
+                            .font(Typography.amount)
+                            .foregroundStyle(Palette.primaryText)
+                            .contentTransition(.numericText())
+                    }
+
+                    Text("Total de lo que agregaste.")
+                        .font(Typography.caption)
+                        .foregroundStyle(Palette.tertiaryText)
+                }
+
+                ForEach(model.draft.streamingDetails) { charge in
+                    ChoiceCard(
+                        title: charge.name,
+                        trailing: money.string(charge.amount, currency: charge.currency),
+                        isSelected: true
+                    ) {
+                        model.removeStreamingDetail(charge)
+                    }
+                }
+            }
+
+            Button {
+                editingStreaming = ChargeDraft(currency: model.draft.currency)
+            } label: {
+                Label("Agregar detalle", systemImage: "plus")
+                    .font(Typography.label)
+                    .foregroundStyle(Palette.primaryText)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.vertical, DesignSystem.Space.xxs)
+            }
+            .buttonStyle(.plain)
         }
     }
 
@@ -94,10 +160,10 @@ struct OnboardingCommitmentAmountsStep: View {
                 icon: "plus",
                 showsSelection: false
             ) {
-                editing = ChargeDraft(currency: model.draft.currency)
+                editingCustom = ChargeDraft(currency: model.draft.currency)
             }
         }
-        .sheet(item: $editing) { draft in
+        .sheet(item: $editingCustom) { draft in
             ChargeEditorSheet(purpose: .fixedExpense, draft: draft, currencies: CurrencyCode.allCases) { saved in
                 model.addCustomCommitment(saved)
             }

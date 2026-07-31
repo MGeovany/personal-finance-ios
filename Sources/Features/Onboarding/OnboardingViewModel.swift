@@ -6,7 +6,7 @@ import Observation
 ///
 /// The flow is not a fixed list of screens. Steps that would ask about something the
 /// user has already ruled out are dropped from the path, so somebody with no debts
-/// and no commitments walks a visibly shorter setup than somebody with both — and
+/// and no commitments walks a visibly shorter setup than somebody with both. And
 /// the progress bar tells the truth for each of them.
 @MainActor
 @Observable
@@ -35,8 +35,10 @@ final class OnboardingViewModel {
 
     private func isRelevant(_ step: OnboardingStep) -> Bool {
         switch step {
+        case .commitmentAmounts:
+            !draft.commitments.isEmpty || !draft.customCommitments.isEmpty
         case .debtAmounts:
-            !draft.debts.isEmpty
+            !draft.debts.isEmpty || draft.wantsCreditCards
         default:
             true
         }
@@ -57,13 +59,19 @@ final class OnboardingViewModel {
         case .name: !draft.name.trimmingCharacters(in: .whitespaces).isEmpty
         case .income: draft.primaryIncome > 0
         case .commitmentAmounts: draft.commitmentsMissingAmounts.isEmpty
-        case .debtAmounts: draft.debts.allSatisfy(\.isValid)
+        case .debtAmounts:
+            creditCardsReady && draft.debts.filter { $0.kind != .creditCard }.allSatisfy(\.isValid)
         default: true
         }
     }
 
+    private var creditCardsReady: Bool {
+        let cards = draft.debts.filter { $0.kind == .creditCard }
+        return !draft.wantsCreditCards || (!cards.isEmpty && cards.allSatisfy(\.isValid))
+    }
+
     /// Why the user cannot move on yet, shown under the button rather than as an
-    /// error, because they have not done anything wrong — they are not done.
+    /// error, because they have not done anything wrong. They are not done.
     var blockedReason: String? {
         guard !canAdvance else { return nil }
         switch step {
@@ -78,6 +86,9 @@ final class OnboardingViewModel {
                 ? "Falta el monto de \(first.label.lowercased())."
                 : "Faltan \(missing.count) montos."
         case .debtAmounts:
+            if draft.wantsCreditCards, !draft.debts.contains(where: { $0.kind == .creditCard && $0.isValid }) {
+                return "Agrega al menos una tarjeta de crédito."
+            }
             return "Cada deuda necesita al menos su saldo."
         default:
             return nil
@@ -156,8 +167,8 @@ final class OnboardingViewModel {
     // MARK: - Answers
     //
     // Kept here rather than in the views so each step view stays a layout. Anything
-    // that has to stay consistent across two fields — a debt's suggested minimum
-    // following its balance — belongs on this side of the line.
+    // that has to stay consistent across two fields. A debt's suggested minimum
+    // following its balance. Belongs on this side of the line.
 
     var greetingName: String {
         draft.name.trimmingCharacters(in: .whitespaces)
@@ -173,17 +184,38 @@ final class OnboardingViewModel {
         if draft.commitments.contains(template) {
             draft.commitments.remove(template)
             draft.commitmentAmounts[template] = nil
+            if template == .streaming { draft.streamingDetails = [] }
         } else {
             draft.commitments.insert(template)
         }
     }
 
     func amount(for template: CommitmentTemplate) -> Money {
-        draft.commitmentAmounts[template] ?? 0
+        if template == .streaming, !draft.streamingDetails.isEmpty {
+            return draft.streamingDetails.reduce(Money.zero) { $0 + $1.monthlyAmount }
+        }
+        return draft.commitmentAmounts[template] ?? 0
     }
 
     func setAmount(_ amount: Money, for template: CommitmentTemplate) {
+        // A single total and a broken-down list are mutually exclusive answers.
+        if template == .streaming, !draft.streamingDetails.isEmpty {
+            draft.streamingDetails = []
+        }
         draft.commitmentAmounts[template] = amount
+    }
+
+    func addStreamingDetail(_ charge: ChargeDraft) {
+        draft.commitmentAmounts[.streaming] = nil
+        if let index = draft.streamingDetails.firstIndex(where: { $0.id == charge.id }) {
+            draft.streamingDetails[index] = charge
+        } else {
+            draft.streamingDetails.append(charge)
+        }
+    }
+
+    func removeStreamingDetail(_ charge: ChargeDraft) {
+        draft.streamingDetails.removeAll { $0.id == charge.id }
     }
 
     func addCustomCommitment(_ charge: ChargeDraft) {
@@ -218,7 +250,21 @@ final class OnboardingViewModel {
 
     /// Ticking a kind of debt creates it already filled in with the rate such debts
     /// usually carry, so the amounts step only has to ask for the balance.
+    ///
+    /// Credit cards are the exception: the user may have several, each named, so the
+    /// amounts step opens an empty list and an "add card" action instead.
     func toggle(_ kind: DebtKind) {
+        if kind == .creditCard {
+            if draft.wantsCreditCards || draft.debts.contains(where: { $0.kind == .creditCard }) {
+                draft.wantsCreditCards = false
+                draft.debts.removeAll { $0.kind == .creditCard }
+            } else {
+                draft.hasNoDebts = false
+                draft.wantsCreditCards = true
+            }
+            return
+        }
+
         if let existing = draft.debts.first(where: { $0.kind == kind }) {
             draft.debts.removeAll { $0.id == existing.id }
         } else {
@@ -235,12 +281,30 @@ final class OnboardingViewModel {
     }
 
     func hasDebt(ofKind kind: DebtKind) -> Bool {
-        draft.debts.contains { $0.kind == kind }
+        if kind == .creditCard {
+            return draft.wantsCreditCards || draft.debts.contains { $0.kind == .creditCard }
+        }
+        return draft.debts.contains { $0.kind == kind }
     }
 
     func declareNoDebts() {
         draft.debts.removeAll()
+        draft.wantsCreditCards = false
         draft.hasNoDebts = true
+    }
+
+    func addCreditCard(_ card: DebtDraft) {
+        draft.hasNoDebts = false
+        draft.wantsCreditCards = true
+        if let index = draft.debts.firstIndex(where: { $0.id == card.id }) {
+            draft.debts[index] = card
+        } else {
+            draft.debts.append(card)
+        }
+    }
+
+    func removeCreditCard(_ card: DebtDraft) {
+        draft.debts.removeAll { $0.id == card.id }
     }
 
     /// Keeps the suggested minimum payment in step with the balance until the user
@@ -281,13 +345,16 @@ final class OnboardingViewModel {
             draft.goals.removeAll { $0.id == existing.id }
         } else {
             draft.hasNoGoals = false
-            draft.goals.append(
-                GoalDraft(
-                    name: template.label,
-                    icon: template.icon,
-                    currency: draft.currency
-                )
+            var goal = GoalDraft(
+                name: template.label,
+                icon: template.icon,
+                currency: draft.currency
             )
+            // Debt freedom is the sum already declared. There is nothing left to invent.
+            if template == .debtFree {
+                goal.targetAmount = draft.totalDebt
+            }
+            draft.goals.append(goal)
         }
     }
 
@@ -317,7 +384,7 @@ final class OnboardingViewModel {
         case .groceries: baseline(for: CategoryKeys.groceries) == 0
         case .transport: baseline(for: CategoryKeys.transport) == 0
         case .outings: baseline(for: CategoryKeys.outings) == 0
-        case .debtKinds: draft.debts.isEmpty && !draft.hasNoDebts
+        case .debtKinds: draft.debts.isEmpty && !draft.wantsCreditCards && !draft.hasNoDebts
         case .savings: draft.emergencyFund == 0 && draft.savings == 0
         case .goals: draft.goals.isEmpty && !draft.hasNoGoals
         default: false

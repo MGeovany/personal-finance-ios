@@ -2,7 +2,7 @@ import Foundation
 
 /// The knobs that turn one algorithm into three plans.
 ///
-/// Adding a fourth speed means adding a `PlanSpeed` case and a tuning here — no
+/// Adding a fourth speed means adding a `PlanSpeed` case and a tuning here. No
 /// engine code changes.
 struct PlanTuning: Equatable, Sendable {
     /// Fraction of the lifestyle the user declared that the plan funds.

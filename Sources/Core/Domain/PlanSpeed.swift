@@ -1,7 +1,7 @@
 import Foundation
 
 /// How fast the user wants to attack their debt. The three speeds are the same
-/// algorithm with different parameters — see `PlanTuning`.
+/// algorithm with different parameters. See `PlanTuning`.
 enum PlanSpeed: String, CaseIterable, Codable, Identifiable, Sendable {
     case loose
     case balanced

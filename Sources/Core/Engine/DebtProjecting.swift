@@ -4,7 +4,7 @@ import Foundation
 protocol DebtProjecting: Sendable {
     /// - Parameters:
     ///   - extraPayment: amount on top of every minimum, sent to the priority debt.
-    ///   - lumpSum: one-off payment applied in the first month, e.g. from savings.
+    ///   - lumpSum: one-off payment applied in the first month, e.g. From savings.
     func project(
         debts: [DebtSnapshot],
         extraPayment: Money,

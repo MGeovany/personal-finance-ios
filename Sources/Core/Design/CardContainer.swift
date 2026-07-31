@@ -3,7 +3,7 @@ import SwiftUI
 /// The app's one card shape. Everything that groups information sits in one of
 /// these, which is what keeps the screens feeling like a single surface.
 ///
-/// Soft white on a warm page, lifted by liquid-glass shadows rather than a border —
+/// Soft white on a warm page, lifted by liquid-glass shadows rather than a border . 
 /// the same treatment as the account card in the reference.
 struct CardContainer<Content: View>: View {
     private let padding: CGFloat

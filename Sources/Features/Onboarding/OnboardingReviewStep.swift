@@ -3,7 +3,7 @@ import SwiftUI
 /// The last screen before the plans: the arithmetic, read back.
 ///
 /// Every number here came from an answer the user gave, in the order they gave them,
-/// ending with what is left. That last line is the point of the whole flow — it is
+/// ending with what is left. That last line is the point of the whole flow. It is
 /// the first time the app tells them something they did not already know.
 struct OnboardingReviewStep: View {
     let model: OnboardingViewModel

@@ -12,7 +12,7 @@ struct CashFlow: Equatable, Sendable {
     ///
     /// Deliberately *not* part of `committed`: those purchases were already
     /// recorded as expenses against their categories, so charging them again here
-    /// would count the same money twice — and a one-off reservation is not a
+    /// would count the same money twice. And a one-off reservation is not a
     /// monthly obligation, so it must not shrink every future month either.
     let reservedForCards: Money
 

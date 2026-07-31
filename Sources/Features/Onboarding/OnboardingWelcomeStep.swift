@@ -1,30 +1,45 @@
 import SwiftUI
 
-/// The opening screen: the five questions the app answers, so the user knows
-/// what all the setup is for.
+/// The opening screen: brand, one line, and room to breathe.
+///
+/// Setup used to open with a checklist of promises inside a card. That reads as a
+/// feature tour. A first screen only needs the name, what the app is for, and the
+/// button that starts. Anything else waits until it is asked.
 struct OnboardingWelcomeStep: View {
-    private let promises = [
-        (icon: "creditcard", text: "Cuánto debes en total"),
-        (icon: "wallet.bifold", text: "Cuánto puedes gastar esta semana"),
-        (icon: "arrow.down.circle", text: "Qué pago te conviene hacer ahora"),
-        (icon: "calendar.badge.checkmark", text: "En qué fecha podrías quedar libre de deudas"),
-        (icon: "chart.line.downtrend.xyaxis", text: "Qué está retrasando tu progreso"),
-    ]
+    @State private var appeared = false
 
     var body: some View {
-        CardContainer {
-            VStack(alignment: .leading, spacing: Layout.gap) {
-                ForEach(promises, id: \.text) { promise in
-                    HStack(spacing: Layout.gap) {
-                        Image(systemName: promise.icon)
-                            .font(.system(size: 16))
-                            .foregroundStyle(Palette.accent)
-                            .frame(width: 24)
-                        Text(promise.text)
-                            .font(Typography.body)
-                            .foregroundStyle(Palette.primaryText)
-                    }
-                }
+        VStack(alignment: .leading, spacing: 0) {
+            Spacer(minLength: DesignSystem.Space.xxxl)
+
+            Text("Cero")
+                .font(Typography.display(72, .displayRegular))
+                .foregroundStyle(Palette.primaryText)
+                .opacity(appeared ? 1 : 0)
+                .offset(y: appeared ? 0 : 12)
+
+            Text("Tu plan para llegar a cero deudas.")
+                .font(Typography.display(36, .displayRegular))
+                .foregroundStyle(Palette.primaryText)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, DesignSystem.Space.l)
+                .opacity(appeared ? 1 : 0)
+                .offset(y: appeared ? 0 : 10)
+
+            Text("Ingreso, gastos y deudas, claros en unos minutos.")
+                .font(Typography.text(22, .light))
+                .foregroundStyle(Palette.secondaryText)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, DesignSystem.Space.m)
+                .opacity(appeared ? 1 : 0)
+                .offset(y: appeared ? 0 : 8)
+
+            Spacer(minLength: DesignSystem.Space.xxxl)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+        .onAppear {
+            withAnimation(DesignSystem.Motion.present.delay(0.08)) {
+                appeared = true
             }
         }
     }

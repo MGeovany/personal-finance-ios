@@ -1,6 +1,6 @@
 import Foundation
 
-/// A secondary goal — a trip, a car, an emergency cushion — as the engine sees it.
+/// A secondary goal. A trip, a car, an emergency cushion. As the engine sees it.
 struct GoalSnapshot: Identifiable, Equatable, Sendable {
     var id: UUID
     var name: String

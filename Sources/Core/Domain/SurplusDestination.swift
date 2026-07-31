@@ -1,6 +1,6 @@
 import Foundation
 
-/// Where leftover money goes — from a cheaper-than-expected utility bill, or from
+/// Where leftover money goes. From a cheaper-than-expected utility bill, or from
 /// a week that closed under budget.
 enum SurplusDestination: String, CaseIterable, Codable, Identifiable, Sendable {
     case debt

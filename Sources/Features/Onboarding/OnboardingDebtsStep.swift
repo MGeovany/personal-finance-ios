@@ -45,29 +45,106 @@ struct OnboardingDebtKindsStep: View {
     }
 }
 
-/// The numbers for each debt that was ticked, one at a time.
+/// The numbers for each debt that was ticked.
 ///
-/// Balances are offered as sizes rather than empty fields: picking "un mes de
-/// sueldo" is faster and more honest than inventing a figure. The rate and the
-/// minimum are filled in from what such debts usually carry, and only corrected if
-/// the user knows better.
+/// Credit cards are collected as named plastic: bank, product, balance. Shown as
+/// cards and open to adding more. Other debts still pick a balance size.
 struct OnboardingDebtAmountsStep: View {
     @Bindable var model: OnboardingViewModel
     let dependencies: AppDependencies
 
     @State private var index = 0
+    @State private var editingCard: DebtDraft?
 
-    private var debts: [DebtDraft] { model.draft.debts }
+    private var otherDebts: [DebtDraft] {
+        model.draft.debts.filter { $0.kind != .creditCard }
+    }
+
+    private var creditCards: [DebtDraft] {
+        model.draft.debts.filter { $0.kind == .creditCard }
+    }
 
     private var current: DebtDraft? {
-        guard !debts.isEmpty else { return nil }
-        return debts[min(index, debts.count - 1)]
+        guard !otherDebts.isEmpty else { return nil }
+        return otherDebts[min(index, otherDebts.count - 1)]
     }
 
     var body: some View {
+        VStack(alignment: .leading, spacing: Layout.sectionGap) {
+            if model.draft.wantsCreditCards || !creditCards.isEmpty {
+                creditCardsSection
+            }
+
+            if !otherDebts.isEmpty {
+                otherDebtsSection
+            }
+
+            if model.draft.totalDebt > 0 {
+                totals
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            }
+        }
+        .animation(DesignSystem.Motion.present, value: creditCards.count)
+        .animation(DesignSystem.Motion.present, value: index)
+        .onAppear { index = firstUnansweredIndex }
+        .sheet(item: $editingCard) { draft in
+            CreditCardEditorSheet(draft: draft) { saved in
+                model.addCreditCard(saved)
+            }
+        }
+    }
+
+    // MARK: - Credit cards
+
+    private var creditCardsSection: some View {
+        VStack(alignment: .leading, spacing: DesignSystem.Space.m) {
+            Text("Tarjetas de crédito")
+                .sectionHeaderStyle()
+
+            Text("Agrega cada una para saber cuál es. Puedes seguir sumando después de guardar.")
+                .font(Typography.caption)
+                .foregroundStyle(Palette.tertiaryText)
+                .fixedSize(horizontal: false, vertical: true)
+
+            ForEach(creditCards) { card in
+                CreditCardVisual(
+                    bank: card.institution,
+                    cardName: card.name,
+                    balance: card.balance,
+                    ratePercent: card.annualRatePercent,
+                    currency: card.currency
+                ) {
+                    editingCard = card
+                }
+                .contextMenu {
+                    Button("Editar") { editingCard = card }
+                    Button("Eliminar", role: .destructive) {
+                        model.removeCreditCard(card)
+                    }
+                }
+            }
+
+            ChoiceCard(
+                title: "Agregar tarjeta de crédito",
+                detail: "Banco, nombre oficial y lo que debes.",
+                icon: "plus",
+                showsSelection: false
+            ) {
+                editingCard = DebtDraft(
+                    kind: .creditCard,
+                    currency: model.draft.currency,
+                    annualRatePercent: DebtKind.creditCard.assumedRate
+                )
+            }
+        }
+    }
+
+    // MARK: - Other debts
+
+    private var otherDebtsSection: some View {
         VStack(alignment: .leading, spacing: Layout.gap) {
-            if debts.count > 1 {
-                Text("\(min(index, debts.count - 1) + 1) de \(debts.count)")
+            if otherDebts.count > 1 {
+                Text("\(min(index, otherDebts.count - 1) + 1) de \(otherDebts.count)")
                     .font(Typography.captionStrong)
                     .foregroundStyle(Palette.tertiaryText)
                     .contentTransition(.numericText())
@@ -83,40 +160,37 @@ struct OnboardingDebtAmountsStep: View {
                         )
                     )
             }
+        }
+    }
 
-            if model.draft.totalDebt > 0, index >= debts.count - 1 {
-                CardContainer {
-                    VStack(alignment: .leading, spacing: Layout.gap) {
-                        DetailRow(
-                            label: "Deuda total",
-                            value: dependencies.money.string(model.draft.totalDebt, currency: model.draft.currency),
-                            tint: Palette.debt
-                        )
-                        DetailRow(
-                            label: "Pagos mínimos al mes",
-                            value: dependencies.money.string(model.draft.totalMinimumPayments, currency: model.draft.currency)
-                        )
-                    }
-                }
-                .transition(.move(edge: .top).combined(with: .opacity))
+    private var totals: some View {
+        CardContainer {
+            VStack(alignment: .leading, spacing: Layout.gap) {
+                DetailRow(
+                    label: "Deuda total",
+                    value: dependencies.money.string(model.draft.totalDebt, currency: model.draft.currency),
+                    tint: Palette.debt
+                )
+                DetailRow(
+                    label: "Pagos mínimos al mes",
+                    value: dependencies.money.string(model.draft.totalMinimumPayments, currency: model.draft.currency)
+                )
             }
         }
-        .animation(DesignSystem.Motion.present, value: index)
-        .onAppear { index = firstUnansweredIndex }
     }
 
     private var firstUnansweredIndex: Int {
-        debts.firstIndex { $0.balance <= 0 } ?? 0
+        otherDebts.firstIndex { $0.balance <= 0 } ?? 0
     }
 
     private func moveForward() {
-        if index + 1 < debts.count {
+        if index + 1 < otherDebts.count {
             index += 1
         }
     }
 }
 
-/// One debt: pick a balance size, confirm the rate, glance at the minimum.
+/// One non-card debt: pick a balance size, confirm the rate, glance at the minimum.
 private struct DebtAnswerCard: View {
     @Bindable var model: OnboardingViewModel
     let debt: DebtDraft
@@ -154,8 +228,6 @@ private struct DebtAnswerCard: View {
                 customPlaceholder: "Lo que debes",
                 onPick: {
                     withAnimation(DesignSystem.Motion.swap) { showsDetails = true }
-                    // A short beat so the rate and minimum can be seen before the
-                    // next debt slides in — enough to correct them, not enough to stop.
                     Task {
                         try? await Task.sleep(for: .milliseconds(420))
                         onAnswered()

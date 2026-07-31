@@ -19,6 +19,9 @@ struct MoneyField: View {
     var placeholder: String = "0"
     /// Off for the rare field where a second currency would only add noise.
     var allowsCurrencySwitch: Bool = true
+    /// Optional guidance under the field. How to arrive at the number, not what
+    /// the number means once saved.
+    var caption: String? = nil
 
     @Environment(\.exchangeRates) private var rates
     @Environment(\.moneyFormatter) private var money
@@ -50,6 +53,13 @@ struct MoneyField: View {
             }
 
             field
+
+            if let caption {
+                Text(caption)
+                    .font(Typography.caption)
+                    .foregroundStyle(Palette.tertiaryText)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
 
             if let equivalent {
                 Text(equivalent)
@@ -89,8 +99,11 @@ struct MoneyField: View {
                 .keyboardType(.decimalPad)
                 .focused($isFocused)
                 .onChange(of: text) { _, newValue in
-                    let typed = MoneyParser.parse(newValue) ?? 0
-                    amount = converted(typed, from: typing, to: currency)
+                    let masked = MoneyParser.masked(newValue)
+                    if masked != newValue { text = masked }
+                    let typed = MoneyParser.parse(masked) ?? 0
+                    // Money fields are magnitudes: a negative amount is never a valid entry.
+                    amount = max(0, converted(typed, from: typing, to: currency))
                 }
         }
         .fieldWell(isFocused: isFocused, height: 60)
@@ -181,32 +194,53 @@ private extension CurrencyCode {
 
 /// Reads and writes the plain text form of an amount.
 enum MoneyParser {
-    /// Accepts both conventions, because the decimal pad shows whichever separator
-    /// the phone's language uses and a pasted amount may use the other one.
+    /// Commas are always thousands separators; only a dot starts the cents.
     ///
-    /// The last separator present is the decimal one when it is followed by one or
-    /// two digits; anything else is grouping and is thrown away.
+    /// Treating a trailing comma as a decimal made `1,200` become `1.20` when the
+    /// user deleted a zero. The field regroups instead, so that edit becomes `120`.
     static func parse(_ text: String) -> Money? {
+        // Signs are stripped: these fields only accept amounts at or above zero.
         let digitsAndSeparators = text.filter { $0.isNumber || $0 == "." || $0 == "," }
         guard !digitsAndSeparators.isEmpty else { return nil }
 
-        var whole = digitsAndSeparators
-        var fraction = ""
+        let whole: String
+        let fraction: String
 
-        if let separator = digitsAndSeparators.lastIndex(where: { $0 == "." || $0 == "," }) {
-            let tail = digitsAndSeparators[digitsAndSeparators.index(after: separator)...]
-            if (1...2).contains(tail.count) {
-                whole = String(digitsAndSeparators[..<separator])
-                fraction = String(tail)
-            }
+        if let dot = digitsAndSeparators.firstIndex(of: ".") {
+            whole = String(digitsAndSeparators[..<dot]).filter(\.isNumber)
+            fraction = String(
+                String(digitsAndSeparators[digitsAndSeparators.index(after: dot)...])
+                    .filter(\.isNumber)
+                    .prefix(2)
+            )
+        } else {
+            whole = digitsAndSeparators.filter(\.isNumber)
+            fraction = ""
         }
 
-        let normalized = whole.filter(\.isNumber) + (fraction.isEmpty ? "" : "." + fraction)
+        let normalized = whole + (fraction.isEmpty ? "" : "." + fraction)
         guard !normalized.isEmpty, normalized != "." else { return nil }
-        return Money(string: normalized)
+        guard let value = Money(string: normalized), value >= 0 else { return nil }
+        return value
     }
 
-    /// Unformatted, so the value can go straight back into a text field.
+    /// Live mask for the field: `1000` becomes `1,000` as the user types.
+    ///
+    /// Grouping uses commas; cents use a dot. Commas in the raw input are stripped
+    /// and re-applied, so deleting a digit from `1,200` yields `120`, never `1.20`.
+    static func masked(_ text: String) -> String {
+        let work = text.filter { $0.isNumber || $0 == "." || $0 == "," }
+        guard !work.isEmpty else { return "" }
+
+        let parts = work.split(separator: ".", maxSplits: 1, omittingEmptySubsequences: false)
+        let grouped = groupThousands(String(parts[0]).filter(\.isNumber))
+        guard parts.count > 1 else { return grouped }
+
+        let fraction = String(String(parts[1]).filter(\.isNumber).prefix(2))
+        return grouped + "." + fraction
+    }
+
+    /// Grouped text for putting an existing amount back into the field.
     ///
     /// Cents are kept: a lempira amount restated in dollars is rarely whole, and
     /// rounding it to the unit would quietly change what gets saved.
@@ -214,6 +248,21 @@ enum MoneyParser {
         var result = Money()
         var value = amount
         NSDecimalRound(&result, &value, 2, .plain)
-        return NSDecimalNumber(decimal: result).stringValue
+        return masked(NSDecimalNumber(decimal: result).stringValue)
+    }
+
+    /// Inserts a comma every three digits from the right (`1000` → `1,000`).
+    private static func groupThousands(_ digits: String) -> String {
+        guard !digits.isEmpty else { return "" }
+
+        let trimmed = digits.drop { $0 == "0" }
+        let core = trimmed.isEmpty ? "0" : String(trimmed)
+
+        var grouped = ""
+        for (index, character) in core.reversed().enumerated() {
+            if index > 0, index.isMultiple(of: 3) { grouped.append(",") }
+            grouped.append(character)
+        }
+        return String(grouped.reversed())
     }
 }

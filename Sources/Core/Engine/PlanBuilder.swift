@@ -1,7 +1,7 @@
 import Foundation
 
 /// Composes the whole calculation. This type decides the *order* of the steps and
-/// nothing else — every rule lives in the collaborator that owns it, so a change
+/// nothing else. Every rule lives in the collaborator that owns it, so a change
 /// to how budgets are cut or debts ordered never touches this file.
 struct PlanBuilder: PlanBuilding {
     private let cashFlowCalculating: CashFlowCalculating

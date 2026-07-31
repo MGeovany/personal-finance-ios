@@ -35,7 +35,7 @@ enum OnboardingStep: Int, CaseIterable, Identifiable {
         case .income: "¿Cuánto es tu ingreso total mensual?"
         case .commitments: "¿Cuáles de estos pagas cada mes?"
         case .commitmentAmounts: "¿Cuánto pagas de cada uno?"
-        case .groceries: "¿Cuánto gastas en supermercado?"
+        case .groceries: "¿Aproximadamente cuánto cocinas al mes?"
         case .transport: "¿Y en transporte?"
         case .outings: "¿Y en salidas y restaurantes?"
         case .debtKinds: "¿Qué deudas tienes?"
@@ -50,7 +50,8 @@ enum OnboardingStep: Int, CaseIterable, Identifiable {
     var help: String? {
         switch self {
         case .welcome:
-            "Vamos a ver cuánto debes, cuánto puedes gastar y cuándo podrías quedar libre de deudas."
+            // The welcome screen draws its own copy; the frame stays out of the way.
+            nil
         case .name:
             "Solo para saber cómo llamarte. Se queda en tu teléfono."
         case .currency:
@@ -61,12 +62,14 @@ enum OnboardingStep: Int, CaseIterable, Identifiable {
             "Marca todo lo que se te va cada mes. Los montos los preguntamos después."
         case .commitmentAmounts:
             "Un aproximado está bien. Si falta alguno, agrégalo aquí."
-        case .groceries, .transport, .outings:
+        case .groceries:
+            "Un aproximado está bien. Elige lo que más se parezca a lo que cocinas en casa."
+        case .transport, .outings:
             "Elige lo que más se parezca. Lo vamos a corregir con tus gastos reales en pocas semanas."
         case .debtKinds:
             "Marca las que tengas. Si no tienes ninguna, dilo y seguimos."
         case .debtAmounts:
-            "Elige un tamaño. Ya pusimos la tasa y el mínimo que suelen tener; cámbialos si sabes los tuyos."
+            "Para tarjetas: banco, nombre y saldo. La tasa es opcional. En el resto, elige un tamaño."
         case .savings:
             "Nunca vamos a recomendarte quedarte sin colchón. Solo necesitamos saber con qué cuentas."
         case .goals:

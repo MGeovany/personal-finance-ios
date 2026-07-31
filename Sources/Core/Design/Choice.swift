@@ -62,6 +62,7 @@ struct ChoiceCard: View {
             }
             .padding(Layout.cardPadding)
             .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(RoundedRectangle(cornerRadius: Layout.chipRadius, style: .continuous))
             .modifier(ChoiceGlassSurface(isSelected: isSelected, cornerRadius: Layout.chipRadius))
         }
         .buttonStyle(ChoiceButtonStyle(isSelected: isSelected))
@@ -95,9 +96,14 @@ struct ChoiceTile: View {
                     .foregroundStyle(Palette.primaryText)
                     .multilineTextAlignment(.leading)
                     .fixedSize(horizontal: false, vertical: true)
+
+                Spacer(minLength: 0)
             }
             .padding(Layout.gap)
             .frame(maxWidth: .infinity, minHeight: 92, alignment: .topLeading)
+            // Empty space inside the tile is not hit-testable by default; without
+            // this, only the icon, label and radio register a tap.
+            .contentShape(RoundedRectangle(cornerRadius: Layout.chipRadius, style: .continuous))
             .modifier(ChoiceGlassSurface(isSelected: isSelected, cornerRadius: Layout.chipRadius))
         }
         .buttonStyle(ChoiceButtonStyle(isSelected: isSelected))
@@ -294,10 +300,11 @@ enum AmountBands {
         )
     }
 
-    /// Drops empty and duplicate amounts so the same number never appears twice.
+    /// Drops duplicate amounts so the same number never appears twice. Zero is
+    /// kept: answers like "trabajo desde casa" are a real choice, not an empty one.
     private static func unique(_ options: [AmountChoice]) -> [AmountChoice] {
         options.reduce(into: [AmountChoice]()) { result, option in
-            guard option.amount > 0, !result.contains(where: { $0.amount == option.amount }) else { return }
+            guard option.amount >= 0, !result.contains(where: { $0.amount == option.amount }) else { return }
             result.append(option)
         }
     }

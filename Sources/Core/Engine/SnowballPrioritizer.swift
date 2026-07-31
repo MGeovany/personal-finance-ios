@@ -1,6 +1,6 @@
 import Foundation
 
-/// Smallest balance first — costs a little more in interest, but debts disappear
+/// Smallest balance first. Costs a little more in interest, but debts disappear
 /// sooner, which for many people is what keeps the plan alive.
 struct SnowballPrioritizer: DebtPrioritizing {
     func order(_ debts: [DebtSnapshot]) -> [DebtSnapshot] {

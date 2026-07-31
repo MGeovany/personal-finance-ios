@@ -4,7 +4,7 @@ import Foundation
 /// entertainment first, groceries and transport last, and never below the floor
 /// that makes a category livable.
 ///
-/// The buffer and reserved categories are excluded here — the buffer is sized
+/// The buffer and reserved categories are excluded here. The buffer is sized
 /// from the surplus and reserves have exact amounts of their own.
 struct LifestyleBudgetAllocator: LifestyleBudgeting {
     func allocate(

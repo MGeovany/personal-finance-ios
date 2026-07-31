@@ -15,7 +15,6 @@ enum CommitmentTemplate: String, CaseIterable, Identifiable {
     case water
     case internet
     case phone
-    case gas
     case tv
     case streaming
     case music
@@ -33,7 +32,6 @@ enum CommitmentTemplate: String, CaseIterable, Identifiable {
         case .water: "Agua"
         case .internet: "Internet"
         case .phone: "Teléfono"
-        case .gas: "Gas"
         case .tv: "Cable"
         case .streaming: "Streaming"
         case .music: "Música"
@@ -51,11 +49,21 @@ enum CommitmentTemplate: String, CaseIterable, Identifiable {
         case .water: "drop"
         case .internet: "wifi"
         case .phone: "phone"
-        case .gas: "flame"
         case .tv: "tv"
         case .streaming: "play.rectangle"
         case .music: "music.note"
         case .cloud: "icloud"
+        }
+    }
+
+    /// Short guidance under the amount field when the bill is hard to pin to one
+    /// figure. Electricity swings month to month, so an average is enough.
+    var amountCaption: String? {
+        switch self {
+        case .electricity:
+            "Pon un aproximado de lo que pagaste en meses anteriores."
+        default:
+            nil
         }
     }
 
@@ -66,7 +74,7 @@ enum CommitmentTemplate: String, CaseIterable, Identifiable {
     var bucket: Bucket {
         switch self {
         case .rent, .tuition, .insurance, .gym: .fixedExpense
-        case .electricity, .water, .internet, .phone, .gas, .tv: .utility
+        case .electricity, .water, .internet, .phone, .tv: .utility
         case .streaming, .music, .cloud: .subscription
         }
     }
@@ -170,15 +178,6 @@ enum CommitmentTemplate: String, CaseIterable, Identifiable {
                     ("Prepago", currency.isSmallDenomination ? 15 : 300),
                     ("Plan normal", currency.isSmallDenomination ? 30 : 600),
                     ("Plan alto", currency.isSmallDenomination ? 50 : 1_000),
-                ],
-                currency: currency
-            )
-        case .gas:
-            AmountBands.absolute(
-                [
-                    ("Poco", currency.isSmallDenomination ? 10 : 200),
-                    ("Normal", currency.isSmallDenomination ? 20 : 400),
-                    ("Alto", currency.isSmallDenomination ? 40 : 800),
                 ],
                 currency: currency
             )

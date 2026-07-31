@@ -3,8 +3,8 @@ import Observation
 
 /// The weekly and monthly closes.
 ///
-/// One view model for both because they ask the same question — what happened, and
-/// what do we do with what is left — over different windows.
+/// One view model for both because they ask the same question. What happened, and
+/// what do we do with what is left. Over different windows.
 @MainActor
 @Observable
 final class PeriodCloseViewModel {

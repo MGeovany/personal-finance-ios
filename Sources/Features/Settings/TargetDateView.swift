@@ -83,7 +83,7 @@ struct TargetDateView: View {
                                 }
                                 Spacer()
                                 VStack(alignment: .trailing, spacing: 2) {
-                                    Text(option.date.map { dependencies.dates.dayAndMonth($0, relativeTo: Date()) } ?? "—")
+                                    Text(option.date.map { dependencies.dates.dayAndMonth($0, relativeTo: Date()) } ?? "···")
                                         .font(Typography.amount)
                                         .foregroundStyle(planStore.request.speed == option.speed ? Palette.accent : Palette.primaryText)
                                     DifficultyDots(difficulty: option.difficulty)

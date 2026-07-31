@@ -13,7 +13,7 @@ struct PlanRequest: Equatable, Sendable {
     var groceryMode: GroceryMode
     var groceryMainShare: Double
     /// One-off amount from savings the user agreed to throw at the debt. Zero
-    /// unless they accepted the suggestion — the plan never assumes it.
+    /// unless they accepted the suggestion. The plan never assumes it.
     var lumpSumFromSavings: Money
 
     var tuning: PlanTuning { PlanTuning.forSpeed(speed) }

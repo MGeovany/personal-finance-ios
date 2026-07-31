@@ -135,7 +135,7 @@ struct UtilitiesView: View {
                     DetailRow(
                         label: reading.paidBySomeoneElse ? "Lo pagó otra persona" : "Monto real",
                         value: reading.paidBySomeoneElse
-                            ? "—"
+                            ? "···"
                             : dependencies.money.string(reading.actualAmount ?? 0, currency: utility.currency)
                     )
                     DetailRow(

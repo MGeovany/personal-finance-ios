@@ -3,7 +3,7 @@ import Foundation
 /// Takes the date the user wants and works backwards to the payment, the weekly
 /// budget, the cuts, the savings and the paused goals it would require.
 ///
-/// The feasibility question is asked at the tightest tuning available — the point
+/// The feasibility question is asked at the tightest tuning available. The point
 /// is to know whether the date is possible *at all*, not whether it fits the plan
 /// the user currently has.
 struct TargetDateSolver: TargetDateSolving {

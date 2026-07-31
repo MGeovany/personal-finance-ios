@@ -2,7 +2,7 @@ import Foundation
 
 /// Distributes the available money in a fixed order of precedence:
 /// goals the user explicitly prioritised, then everyday life, then the buffer,
-/// remaining goals and free margin — and whatever survives all of that becomes
+/// remaining goals and free margin. And whatever survives all of that becomes
 /// the extra debt payment.
 ///
 /// Putting debt last is deliberate: it absorbs every improvement automatically,

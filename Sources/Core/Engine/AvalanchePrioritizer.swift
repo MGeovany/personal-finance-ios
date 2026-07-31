@@ -1,6 +1,6 @@
 import Foundation
 
-/// Highest interest rate first — the cheapest order in total interest, which is
+/// Highest interest rate first. The cheapest order in total interest, which is
 /// why the app recommends it by default.
 struct AvalanchePrioritizer: DebtPrioritizing {
     func order(_ debts: [DebtSnapshot]) -> [DebtSnapshot] {

@@ -2,7 +2,7 @@ import SwiftUI
 
 /// How much is left to spend this week and this month.
 ///
-/// Answers "¿cuánto puedo gastar?" — the question users open the app for most
+/// Answers "¿cuánto puedo gastar?". the question users open the app for most
 /// often, so it sits directly under the debt total.
 struct SpendingRoomCard: View {
     let week: BudgetConsumption
@@ -53,7 +53,7 @@ struct SpendingRoomCard: View {
         }
     }
 
-    /// Amber once the week is nearly spent, and when it is over — never red. Going
+    /// Amber once the week is nearly spent, and when it is over. Never red. Going
     /// over budget is information, not an alarm.
     private func tint(for consumption: BudgetConsumption) -> Color {
         if consumption.isOverBudget { return Palette.caution }

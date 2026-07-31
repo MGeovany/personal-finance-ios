@@ -41,7 +41,7 @@ struct ChargeEditorSheet: View {
             case .income: "Trabajo por cuenta propia"
             case .fixedExpense: "Alquiler"
             case .utility: "Luz"
-            case .subscription: "Streaming"
+            case .subscription: "Netflix"
             }
         }
     }

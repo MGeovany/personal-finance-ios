@@ -51,7 +51,7 @@ struct WeeklyCloseSheet: View {
                 )
                 DetailRow(
                     label: "Nueva fecha estimada",
-                    value: model.estimatedDate.map { dependencies.dates.dayAndMonth($0, relativeTo: Date()) } ?? "—"
+                    value: model.estimatedDate.map { dependencies.dates.dayAndMonth($0, relativeTo: Date()) } ?? "···"
                 )
             }
         }

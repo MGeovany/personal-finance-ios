@@ -1,7 +1,7 @@
 import Foundation
 
 /// Formats money the way the app talks about it: whole units, grouped
-/// thousands, symbol in front. Cents are dropped on purpose — these numbers are
+/// thousands, symbol in front. Cents are dropped on purpose. These numbers are
 /// meant to be read at a glance, and a budget of `L2,664.60` reads worse than
 /// `L2,665` without being any more useful.
 struct MoneyFormatter: MoneyFormatting {

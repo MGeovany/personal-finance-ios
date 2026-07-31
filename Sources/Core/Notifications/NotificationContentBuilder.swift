@@ -4,7 +4,7 @@ import Foundation
 ///
 /// The tone rule: every message is useful and direct, and none of them makes the
 /// user feel bad. "¿Ya agregaste tus gastos de hoy?" is a question, not a
-/// reprimand — and it says where to look.
+/// reprimand. And it says where to look.
 struct NotificationContentBuilder: Sendable {
     private let money: MoneyFormatting
     private let dates: PlanDateFormatting

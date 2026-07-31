@@ -36,7 +36,7 @@ final class BudgetViewModel {
     var currentWeekIndex: Int? { plan.weekly.week(containing: now)?.index }
     var grocery: GroceryPlan { plan.grocery }
 
-    /// Categories with a budget this month, biggest first — where the money goes is
+    /// Categories with a budget this month, biggest first. Where the money goes is
     /// the first thing worth seeing.
     var consumptions: [BudgetConsumption] {
         progress.monthlyProgress(plan: plan, on: now)

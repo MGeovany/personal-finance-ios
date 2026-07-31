@@ -3,7 +3,7 @@ import Foundation
 /// One line of the plan comparison table.
 ///
 /// The comparison is defined as data so all three plans are guaranteed to show
-/// the same rows in the same order — a column that silently omitted a row would
+/// the same rows in the same order. A column that silently omitted a row would
 /// make the comparison dishonest.
 struct PlanComparisonRow: Identifiable {
     let id: String
@@ -83,7 +83,7 @@ struct PlanComparisonRow: Identifiable {
                 label: "Intereses de más",
                 value: { plan in
                     let extra = extraInterest(plan.speed)
-                    return extra > 0 ? "+" + amount(extra) : "—"
+                    return extra > 0 ? "+" + amount(extra) : "···"
                 }
             ),
             PlanComparisonRow(

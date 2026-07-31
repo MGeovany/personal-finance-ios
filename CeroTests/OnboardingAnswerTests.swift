@@ -44,23 +44,83 @@ struct OnboardingAnswerTests {
         #expect(model.draft.fixedExpenses.map(\.name) == ["Cuota del club"])
     }
 
+    @Test("Streaming can be a single total or named services that replace it")
+    func streamingDetailsReplaceTotal() {
+        let model = makeModel()
+
+        model.toggle(CommitmentTemplate.streaming)
+        model.setAmount(500, for: .streaming)
+        #expect(model.draft.subscriptions.map(\.name) == ["Streaming"])
+
+        model.addStreamingDetail(ChargeDraft(name: "Netflix", amount: 200, currency: .hnl))
+        model.addStreamingDetail(ChargeDraft(name: "Disney+", amount: 180, currency: .hnl))
+
+        #expect(model.draft.subscriptions.map(\.name) == ["Netflix", "Disney+"])
+        #expect(model.amount(for: .streaming) == 380)
+        #expect(model.draft.commitmentsMissingAmounts.isEmpty)
+    }
+
     // MARK: - Debts
 
     @Test("Ticking a debt fills in the rate such debts usually carry")
     func debtArrivesWithAssumedRate() {
         let model = makeModel()
 
-        model.toggle(DebtKind.creditCard)
+        model.toggle(DebtKind.personalLoan)
 
         let debt = try! #require(model.draft.debts.first)
-        #expect(debt.annualRatePercent == DebtKind.creditCard.assumedRate)
-        #expect(debt.name == DebtKind.creditCard.suggestedName)
+        #expect(debt.annualRatePercent == DebtKind.personalLoan.assumedRate)
+        #expect(debt.name == DebtKind.personalLoan.suggestedName)
+    }
+
+    @Test("Ticking credit cards opens the multi-card path without a blank row")
+    func creditCardsWaitToBeNamed() {
+        let model = makeModel()
+
+        model.toggle(DebtKind.creditCard)
+
+        #expect(model.draft.wantsCreditCards)
+        #expect(model.draft.debts.isEmpty)
+        #expect(model.hasDebt(ofKind: .creditCard))
+    }
+
+    @Test("Named credit cards keep bank, product and balance")
+    func creditCardsCanStack() {
+        let model = makeModel()
+        model.toggle(DebtKind.creditCard)
+
+        model.addCreditCard(
+            DebtDraft(
+                name: "BAC Visa Signature",
+                institution: "BAC",
+                kind: .creditCard,
+                balance: 12_000,
+                currency: .hnl,
+                annualRatePercent: 55,
+                minimumPayment: 600
+            )
+        )
+        model.addCreditCard(
+            DebtDraft(
+                name: "Ficohsa Rewards",
+                institution: "Ficohsa",
+                kind: .creditCard,
+                balance: 8_000,
+                currency: .hnl,
+                annualRatePercent: 55,
+                minimumPayment: 400
+            )
+        )
+
+        #expect(model.draft.debts.map(\.name) == ["BAC Visa Signature", "Ficohsa Rewards"])
+        #expect(model.draft.totalDebt == 20_000)
+        #expect(model.draft.debts.count == 2)
     }
 
     @Test("The suggested minimum payment follows the balance as it is typed")
     func minimumFollowsBalance() {
         let model = makeModel()
-        model.toggle(DebtKind.creditCard)
+        model.toggle(DebtKind.personalLoan)
         let debt = try! #require(model.draft.debts.first)
 
         model.setBalance(80_000, for: debt)
@@ -75,7 +135,7 @@ struct OnboardingAnswerTests {
     @Test("A minimum the user typed is never overwritten by the suggestion")
     func typedMinimumSurvivesBalanceChange() {
         let model = makeModel()
-        model.toggle(DebtKind.creditCard)
+        model.toggle(DebtKind.personalLoan)
         model.setBalance(80_000, for: model.draft.debts[0])
 
         model.setMinimum(2_500, for: model.draft.debts[0])
@@ -92,6 +152,7 @@ struct OnboardingAnswerTests {
         model.declareNoDebts()
 
         #expect(model.draft.debts.isEmpty)
+        #expect(!model.draft.wantsCreditCards)
         #expect(model.draft.hasNoDebts)
 
         model.toggle(DebtKind.carLoan)

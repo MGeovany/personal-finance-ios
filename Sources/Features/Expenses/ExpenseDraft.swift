@@ -24,7 +24,7 @@ struct ExpenseDraft: Equatable {
     }
 
     /// Cash and debit leave immediately. A card purchase either consumes money the
-    /// user already has — which must then be locked away — or becomes new debt.
+    /// user already has. Which must then be locked away. Or becomes new debt.
     var backing: ExpenseBacking {
         guard paymentMethod == .creditCard else { return .settled }
         return hasMoneySetAside ? .reserved : .financed

@@ -2,12 +2,12 @@ import SwiftUI
 
 /// What the user wants besides being out of debt.
 ///
-/// Picked from a grid of the usual ones, and priced by tapping a size rather than
-/// inventing a number. Goals are the only place the app ever tells the user
-/// something costs them time rather than money, so it is worth knowing about them
-/// from the first day even without an exact amount.
+/// Picked from a grid of the usual ones. Most goals are priced by tapping a size;
+/// a trip asks for a typed amount, and clearing debt uses the total already given.
 struct OnboardingGoalsStep: View {
     @Bindable var model: OnboardingViewModel
+
+    @Environment(\.moneyFormatter) private var money
 
     var body: some View {
         VStack(alignment: .leading, spacing: Layout.gap) {
@@ -44,10 +44,14 @@ struct OnboardingGoalsStep: View {
         .animation(DesignSystem.Motion.swap, value: model.draft.goals.count)
     }
 
-    /// Everything except the catch-all, which needs a name and therefore a form —
-    /// out of place in a step meant to be answered by tapping.
+    /// Everything except the catch-all. Debt freedom only appears when there is
+    /// something to clear. Otherwise the tile would be a dead end.
     private var offered: [GoalTemplate] {
-        GoalTemplate.allCases.filter { $0 != .custom }
+        GoalTemplate.allCases.filter { template in
+            if template == .custom { return false }
+            if template == .debtFree { return model.draft.totalDebt > 0 }
+            return true
+        }
     }
 
     private var amounts: some View {
@@ -63,6 +67,7 @@ struct OnboardingGoalsStep: View {
         .transition(.move(edge: .top).combined(with: .opacity))
     }
 
+    @ViewBuilder
     private func goalAmount(_ goal: GoalDraft) -> some View {
         VStack(alignment: .leading, spacing: DesignSystem.Space.s) {
             HStack(spacing: Layout.gap) {
@@ -74,24 +79,59 @@ struct OnboardingGoalsStep: View {
                     .foregroundStyle(Palette.primaryText)
             }
 
-            AmountChoices(
-                options: targetChoices(for: goal),
-                amount: Binding(
-                    get: { goal.targetAmount },
-                    set: { model.setTarget($0, for: goal) }
-                ),
-                currency: model.draft.currency,
-                customTitle: "Otra cantidad",
-                customPlaceholder: "Lo que cuesta"
-            )
+            if template(for: goal) == .debtFree {
+                debtFreeSummary(goal)
+            } else if template(for: goal) == .trip {
+                CardContainer {
+                    MoneyField(
+                        title: "Costo del viaje",
+                        amount: Binding(
+                            get: { goal.targetAmount },
+                            set: { model.setTarget($0, for: goal) }
+                        ),
+                        currency: model.draft.currency,
+                        caption: "Un aproximado está bien."
+                    )
+                }
+            } else {
+                AmountChoices(
+                    options: targetChoices(for: goal),
+                    amount: Binding(
+                        get: { goal.targetAmount },
+                        set: { model.setTarget($0, for: goal) }
+                    ),
+                    currency: model.draft.currency,
+                    customTitle: "Otra cantidad",
+                    customPlaceholder: "Lo que cuesta"
+                )
+            }
         }
     }
 
+    private func debtFreeSummary(_ goal: GoalDraft) -> some View {
+        CardContainer {
+            VStack(alignment: .leading, spacing: DesignSystem.Space.s) {
+                DetailRow(
+                    label: "Meta",
+                    value: money.string(goal.targetAmount, currency: goal.currency),
+                    tint: Palette.debt
+                )
+                Text("Es el total de lo que debes. El plan te lleva a dejarlo en cero.")
+                    .font(Typography.caption)
+                    .foregroundStyle(Palette.tertiaryText)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+
+    private func template(for goal: GoalDraft) -> GoalTemplate? {
+        GoalTemplate.allCases.first { $0.label == goal.name }
+    }
+
     /// Sizes labelled the way people talk about goals, derived from income so a
-    /// trip is not the same number for every salary.
+    /// car is not the same number for every salary.
     private func targetChoices(for goal: GoalDraft) -> [AmountChoice] {
-        let template = GoalTemplate.allCases.first { $0.label == goal.name }
-        let bands = template?.targetShares ?? [
+        let bands = template(for: goal)?.targetShares ?? [
             ("Pequeño", 1.0),
             ("Normal", 2.5),
             ("Grande", 5.0),
@@ -104,8 +144,8 @@ private extension GoalTemplate {
     /// Target sizes as months of income, named for recognition.
     var targetShares: [(label: String, share: Double)] {
         switch self {
-        case .trip:
-            [("Cercano", 0.8), ("Internacional", 2.0), ("El grande", 4.0)]
+        case .debtFree, .trip:
+            []
         case .car:
             [("Usado", 4.0), ("Más nuevo", 8.0), ("Nuevo", 14.0)]
         case .emergency:

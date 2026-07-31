@@ -15,13 +15,13 @@ Cero is not a spreadsheet. Opening it answers five questions:
 ## Language convention
 
 All documentation, code, comments and commit messages are in **English**. Only the
-text the user actually sees on screen is in **Spanish** — and that copy lives in the
+text the user actually sees on screen is in **Spanish**. and that copy lives in the
 presentation layer (`Core/Format` and the feature views), never in the engine.
 
 ## Stack
 
 - SwiftUI (iOS 18+), Swift
-- SwiftData for local persistence — no backend, no login
+- SwiftData for local persistence. No backend, no login
 - XcodeGen: the project is generated from `project.yml`
 
 ## Running it
@@ -43,7 +43,7 @@ the user enters.
 
 A **sample user** (`MockUser`) is saved alongside it: L45,000 of income, three debts
 totalling L175,500, utilities, subscriptions, a goal and a few days of spending. It
-never loads on its own — it has to be asked for, either with `make mock` (which
+never loads on its own. It has to be asked for, either with `make mock` (which
 passes `CERO_MOCK_USER=1`) or from **Ajustes › Desarrollo** in debug builds. It only
 loads into an empty store, so it can never overwrite real entries.
 
@@ -64,7 +64,7 @@ Sources/
     Format/    Spanish wording and number/date formatting
     Store/     SwiftData: entities, repositories, snapshot assembly
     Notifications/  What is worth notifying, and how it is delivered
-    Engine/    Planning engine (pure — no UI, no persistence)
+    Engine/    Planning engine (pure. No UI, no persistence)
     Domain/    Pure value types, no dependencies
 ```
 
@@ -99,7 +99,7 @@ existing ones.
 ### Two engine behaviours the app depends on
 
 - **Rollover.** The monthly outlay stays constant. When a debt clears, its minimum
-  keeps being paid — into the next debt in line. The user never redirects anything
+  keeps being paid. Into the next debt in line. The user never redirects anything
   by hand.
 - **Day-level dates.** Money is assumed to arrive evenly through the month, so a
   payoff date lands on a day rather than a month boundary. That is what makes
@@ -123,5 +123,5 @@ as under-budgeted rather than as a discipline problem, and the app offers to rai
 `PlanStore` holds the single plan the whole app reads. Features mutate their own
 repository and then ask for a recalculation, so no screen can display a number that
 no longer follows from the data. `SnapshotAssembler` is the only seam between
-storage and calculation — every amount is converted to the user's main currency
+storage and calculation. Every amount is converted to the user's main currency
 there, before the engine sees it.

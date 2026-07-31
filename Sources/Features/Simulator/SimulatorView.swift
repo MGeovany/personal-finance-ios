@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// "¿Qué pasa si...?" — try a decision, see the new numbers, keep it or discard it.
+/// "¿Qué pasa si...?". try a decision, see the new numbers, keep it or discard it.
 struct SimulatorView: View {
     let dependencies: AppDependencies
     @State private var model: SimulatorViewModel
@@ -196,8 +196,8 @@ struct SimulatorView: View {
                 VStack(spacing: Layout.gap) {
                     comparisonRow(
                         "Fecha libre de deudas",
-                        before: result.current.freedomDate.map { dependencies.dates.dayAndMonth($0, relativeTo: Date()) } ?? "—",
-                        after: result.simulated.freedomDate.map { dependencies.dates.dayAndMonth($0, relativeTo: Date()) } ?? "—"
+                        before: result.current.freedomDate.map { dependencies.dates.dayAndMonth($0, relativeTo: Date()) } ?? "···",
+                        after: result.simulated.freedomDate.map { dependencies.dates.dayAndMonth($0, relativeTo: Date()) } ?? "···"
                     )
                     RowDivider()
                     comparisonRow(

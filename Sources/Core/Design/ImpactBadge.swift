@@ -3,7 +3,7 @@ import SwiftUI
 /// The app's signature element: how many days a decision moves the freedom date.
 ///
 /// Green when it pulls the date closer, amber when it pushes it out, grey when
-/// nothing changes. Never red — spending money is not a moral failure, it just
+/// nothing changes. Never red. Spending money is not a moral failure, it just
 /// has a consequence, and the consequence is the number shown here.
 struct ImpactBadge: View {
     let impact: PlanImpact

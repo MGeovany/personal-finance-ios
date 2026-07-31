@@ -1,7 +1,7 @@
 import Foundation
 
 /// A complete answer to "what should I do with my money this month, and when
-/// does this end?" — the single object every screen reads from.
+/// does this end?". the single object every screen reads from.
 struct FinancialPlan: Identifiable, Equatable, Sendable {
     let speed: PlanSpeed
     /// Editable, so it comes from storage rather than from `speed.defaultName`.

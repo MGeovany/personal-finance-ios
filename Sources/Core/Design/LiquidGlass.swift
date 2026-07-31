@@ -5,7 +5,7 @@ import SwiftUI
 ///
 /// On iOS 26 the system glass material is used so buttons and cards refract what
 /// sits behind them. Below that, the same look is approximated with layered
-/// shadows and a faint top highlight — the reference's "pressed out of the page"
+/// shadows and a faint top highlight. The reference's "pressed out of the page"
 /// reading.
 enum LiquidGlass {
     /// A soft white fill with a hair of translucency, for secondary pills and

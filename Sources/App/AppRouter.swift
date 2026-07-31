@@ -3,8 +3,8 @@ import Observation
 
 /// Which of the three top-level phases the app is in.
 ///
-/// Held apart from `RootView` so anything that changes the app's footing — finishing
-/// setup, wiping the store — can move the user without reaching into a view's state.
+/// Held apart from `RootView` so anything that changes the app's footing. Finishing
+/// setup, wiping the store. Can move the user without reaching into a view's state.
 @MainActor
 @Observable
 final class AppRouter {

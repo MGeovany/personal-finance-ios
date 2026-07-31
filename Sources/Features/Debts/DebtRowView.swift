@@ -29,7 +29,7 @@ struct DebtRowView: View {
                         )
                         StatTile(
                             label: "Queda en cero",
-                            value: payoffDate.map { dates.dayAndMonth($0, relativeTo: Date()) } ?? "—",
+                            value: payoffDate.map { dates.dayAndMonth($0, relativeTo: Date()) } ?? "···",
                             size: .small
                         )
                     }

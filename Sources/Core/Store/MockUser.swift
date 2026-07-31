@@ -3,8 +3,8 @@ import Foundation
 /// A saved sample situation: one household with three debts, services,
 /// subscriptions, a goal and a few days of spending.
 ///
-/// Never loaded on its own. It has to be asked for — with `CERO_MOCK_USER=1` at
-/// launch, or from the developer section in settings — so the app a real user
+/// Never loaded on its own. It has to be asked for. With `CERO_MOCK_USER=1` at
+/// launch, or from the developer section in settings. So the app a real user
 /// opens is always empty and theirs to fill.
 @MainActor
 struct MockUser {

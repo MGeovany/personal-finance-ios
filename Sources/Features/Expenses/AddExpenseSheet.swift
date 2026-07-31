@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Records an expense, then says what it cost — not just in money, but in days.
+/// Records an expense, then says what it cost. Not just in money, but in days.
 struct AddExpenseSheet: View {
     let dependencies: AppDependencies
     @State private var model: AddExpenseViewModel

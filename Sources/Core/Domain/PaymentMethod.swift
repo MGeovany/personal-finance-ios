@@ -34,7 +34,7 @@ enum PaymentMethod: String, CaseIterable, Codable, Identifiable, Sendable {
 
 /// Whether a card purchase has money set aside for it.
 enum ExpenseBacking: String, CaseIterable, Codable, Sendable {
-    /// Paid outright — nothing to reserve.
+    /// Paid outright. Nothing to reserve.
     case settled
     /// On the card, but the money is reserved and no longer spendable.
     case reserved

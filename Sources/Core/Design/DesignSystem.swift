@@ -7,7 +7,7 @@ import SwiftUI
 ///
 /// Liquid glass, monochrome: a warm off-white page, soft white cards and pills
 /// lifted by light, and a single black primary action. The only colour that ever
-/// appears carries meaning — green when something is on track, red when something
+/// appears carries meaning. Green when something is on track, red when something
 /// is wrong.
 ///
 /// Views do not reach in here directly. They use the semantic layers below
@@ -18,7 +18,7 @@ enum DesignSystem {
     /// The monochrome ramp, from the page up to pure white and down to black.
     ///
     /// Tuned a hair warm so white glass cards can lift off it the way they do in
-    /// the liquid-glass reference — a cold grey makes the same shadows look dirty.
+    /// the liquid-glass reference. A cold grey makes the same shadows look dirty.
     enum Ink {
         /// The page itself: soft warm grey, so white cards and pills can float.
         static let canvas = Color(red: 0.945, green: 0.943, blue: 0.938)
@@ -124,7 +124,7 @@ enum DesignSystem {
         case flush
         /// A card or a secondary pill.
         case raised
-        /// A primary action, a floating bar — anything that must lift further.
+        /// A primary action, a floating bar. Anything that must lift further.
         case floating
 
         var ambient: (color: Color, radius: CGFloat, y: CGFloat) {
@@ -222,7 +222,7 @@ enum Palette {
 /// The scale is built around one idea: the number that answers the user's
 /// question is large, and everything else steps well back from it.
 enum Typography {
-    /// The single most important number on a screen — the balance in the reference.
+    /// The single most important number on a screen. The balance in the reference.
     static let hero = display(40, .displayBold).monospacedDigit()
     /// A primary number inside a card.
     static let statistic = display(28, .displayBold).monospacedDigit()
@@ -272,7 +272,7 @@ enum Typography {
 }
 
 extension View {
-    /// Section headers: small, spaced, quiet — the "ACCOUNT BALANCE:" treatment.
+    /// Section headers: small, spaced, quiet. The "ACCOUNT BALANCE:" treatment.
     func sectionHeaderStyle() -> some View {
         font(Typography.sectionTitle)
             .textCase(.uppercase)

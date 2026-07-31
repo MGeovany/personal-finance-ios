@@ -3,7 +3,7 @@ import SwiftUI
 /// The filled action. One per screen at most: the app should always make the next
 /// step obvious rather than offer five equal options.
 ///
-/// Black liquid-glass pill — the only opaque action on a page of translucent
+/// Black liquid-glass pill. The only opaque action on a page of translucent
 /// whites, which is what makes it the next step without needing colour.
 struct PrimaryButtonStyle: ButtonStyle {
     var tint: Color = Palette.accent
@@ -15,6 +15,8 @@ struct PrimaryButtonStyle: ButtonStyle {
             .foregroundStyle(isEnabled ? Palette.invertedText : Palette.tertiaryText)
             .frame(maxWidth: .infinity)
             .frame(height: Layout.controlHeight)
+            // Empty space around the label is not hit-testable by default.
+            .contentShape(Capsule())
             .modifier(
                 LiquidPrimaryModifier(
                     tint: tint,
@@ -38,6 +40,7 @@ struct SecondaryButtonStyle: ButtonStyle {
             .foregroundStyle(isEnabled ? Palette.primaryText : Palette.tertiaryText)
             .frame(maxWidth: .infinity)
             .frame(height: Layout.controlHeight)
+            .contentShape(Capsule())
             .modifier(LiquidGlassCapsuleModifier(isPressed: configuration.isPressed || !isEnabled))
             .scaleEffect(configuration.isPressed ? 0.97 : 1)
             .animation(DesignSystem.Motion.tap, value: configuration.isPressed)
@@ -55,6 +58,7 @@ struct QuietButtonStyle: ButtonStyle {
             .foregroundStyle(tint)
             .frame(maxWidth: .infinity)
             .frame(height: Layout.minimumTouch)
+            .contentShape(Rectangle())
             .opacity(configuration.isPressed ? 0.5 : 1)
             .animation(DesignSystem.Motion.tap, value: configuration.isPressed)
     }
@@ -72,6 +76,7 @@ struct CompactButtonStyle: ButtonStyle {
                     .foregroundStyle(Palette.invertedText)
                     .padding(.horizontal, DesignSystem.Space.l)
                     .frame(height: 38)
+                    .contentShape(Capsule())
                     .modifier(
                         LiquidPrimaryModifier(
                             tint: Palette.accent,
@@ -85,6 +90,7 @@ struct CompactButtonStyle: ButtonStyle {
                     .foregroundStyle(Palette.primaryText)
                     .padding(.horizontal, DesignSystem.Space.l)
                     .frame(height: 38)
+                    .contentShape(Capsule())
                     .modifier(LiquidGlassCapsuleModifier(isPressed: configuration.isPressed))
             }
         }
@@ -95,7 +101,7 @@ struct CompactButtonStyle: ButtonStyle {
 
 /// A round button holding a single glyph: close, back, notifications, more.
 ///
-/// The reference's circular wells — extruded white glass with a soft rim.
+/// The reference's circular wells. Extruded white glass with a soft rim.
 struct IconButtonStyle: ButtonStyle {
     var size: CGFloat = Layout.iconButton
     var isProminent: Bool = false
@@ -105,6 +111,7 @@ struct IconButtonStyle: ButtonStyle {
             .font(Typography.text(15, .medium))
             .foregroundStyle(isProminent ? Palette.invertedText : Palette.secondaryText)
             .frame(width: size, height: size)
+            .contentShape(Circle())
             .modifier(
                 LiquidGlassCircleModifier(
                     isProminent: isProminent,

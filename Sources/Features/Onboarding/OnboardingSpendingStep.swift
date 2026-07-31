@@ -5,7 +5,7 @@ import SwiftUI
 /// Nobody knows what they spend on groceries. Asked for a number they invent one,
 /// and it is usually low by a third. Asked to choose between four amounts that are
 /// each a plausible share of what they earn, they pick the one that matches their
-/// life — which is both easier and more honest. The app says outright that it will
+/// life. Which is both easier and more honest. The app says outright that it will
 /// correct the figure from real spending, so the answer carries no weight it cannot
 /// bear.
 struct OnboardingSpendingStep: View {
@@ -35,6 +35,7 @@ struct OnboardingSpendingStep: View {
                 ]
             case .transport:
                 [
+                    ("Trabajo desde casa", 0.0),
                     ("Camino o me llevan", 0.02),
                     ("Bus y Uber de vez en cuando", 0.06),
                     ("Uber casi diario", 0.12),

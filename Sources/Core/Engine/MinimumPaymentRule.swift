@@ -4,7 +4,7 @@ import Foundation
 ///
 /// Users often enter a minimum payment that barely covers interest, which would
 /// make the projection run forever. The rule keeps the stated minimum whenever it
-/// makes progress, and otherwise raises it to interest plus a slice of principal —
+/// makes progress, and otherwise raises it to interest plus a slice of principal . 
 /// the same way card issuers compute theirs.
 struct MinimumPaymentRule: Sendable {
     /// Principal fraction added on top of interest when the stated minimum is

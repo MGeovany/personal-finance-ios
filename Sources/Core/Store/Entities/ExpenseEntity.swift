@@ -80,6 +80,6 @@ extension ExpenseEntity {
     var isReservedForCard: Bool { backing == .reserved }
 
     /// Counts against this month's category budget. Financed card purchases do
-    /// too — the spending happened — but they also raised the debt.
+    /// too. The spending happened. But they also raised the debt.
     var consumesBudget: Bool { goalID == nil }
 }

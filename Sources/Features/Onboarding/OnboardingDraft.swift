@@ -11,10 +11,13 @@ struct OnboardingDraft: Equatable {
     var otherIncomes: [ChargeDraft] = []
 
     /// The monthly payments the user ticked, and what each one costs. Kept as
-    /// templates rather than rows so the two questions — which ones, then how much —
+    /// templates rather than rows so the two questions. Which ones, then how much . 
     /// can be asked one at a time.
     var commitments: Set<CommitmentTemplate> = []
     var commitmentAmounts: [CommitmentTemplate: Money] = [:]
+    /// Named streaming services (Netflix, Disney+…) when the user breaks the
+    /// total down. Empty means they entered a single Streaming amount instead.
+    var streamingDetails: [ChargeDraft] = []
     /// Anything the offered list did not cover, entered by hand.
     var customCommitments: [ChargeDraft] = []
 
@@ -26,6 +29,9 @@ struct OnboardingDraft: Equatable {
     var savings: Money = 0
 
     var debts: [DebtDraft] = []
+    /// Credit cards are collected one by one on the amounts step, so selecting the
+    /// kind does not create a blank row. It only opens that section.
+    var wantsCreditCards = false
     /// Set when the user says outright that they have none, which is a different
     /// answer from not having filled the step in yet.
     var hasNoDebts = false
@@ -54,7 +60,25 @@ struct OnboardingDraft: Equatable {
     }
 
     var subscriptions: [ChargeDraft] {
-        charges(in: .subscription)
+        var rows: [ChargeDraft] = []
+
+        if commitments.contains(.streaming) {
+            if streamingDetails.isEmpty {
+                if let amount = commitmentAmounts[.streaming], amount > 0 {
+                    rows.append(ChargeDraft(name: CommitmentTemplate.streaming.label, amount: amount, currency: currency))
+                }
+            } else {
+                rows.append(contentsOf: streamingDetails.filter(\.isValid))
+            }
+        }
+
+        for template in CommitmentTemplate.all(in: .subscription) where template != .streaming {
+            guard commitments.contains(template),
+                  let amount = commitmentAmounts[template], amount > 0 else { continue }
+            rows.append(ChargeDraft(name: template.label, amount: amount, currency: currency))
+        }
+
+        return rows
     }
 
     private func charges(in bucket: CommitmentTemplate.Bucket) -> [ChargeDraft] {
@@ -71,7 +95,12 @@ struct OnboardingDraft: Equatable {
     var commitmentsMissingAmounts: [CommitmentTemplate] {
         CommitmentTemplate.allCases
             .filter { commitments.contains($0) }
-            .filter { (commitmentAmounts[$0] ?? 0) <= 0 }
+            .filter { template in
+                if template == .streaming, !streamingDetails.isEmpty {
+                    return !streamingDetails.contains(where: \.isValid)
+                }
+                return (commitmentAmounts[template] ?? 0) <= 0
+            }
     }
 
     // MARK: - Totals
