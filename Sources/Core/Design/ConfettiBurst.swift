@@ -1,19 +1,22 @@
 import SwiftUI
 
-/// A short burst of confetti, fired by changing `trigger`.
+/// Confetti falling across the whole screen, fired by changing `trigger`.
 ///
-/// The one place the app is allowed to be loud. Registering an abono is the moment the
-/// plan actually happens, and it deserves more than a row turning grey. Kept to about a
-/// second, drawn behind everything it celebrates, and never hit-testable, so it cannot
-/// get in the way of the next tap.
+/// The one place the app is allowed to be loud, and the only place it is allowed to be
+/// colourful. Everything else is monochrome on purpose; confetti in ink and grey reads as
+/// debris rather than celebration, so this is a deliberate exception rather than a break in
+/// the system.
 ///
-/// Honours Reduce Motion by simply not firing: a burst of moving shapes is exactly what
-/// that setting exists to switch off.
+/// Registering an abono is the moment the plan actually happens. It deserves more than a row
+/// turning grey.
+///
+/// Honours Reduce Motion by simply not firing: a screen of moving shapes is exactly what that
+/// setting exists to switch off.
 struct ConfettiBurst: View {
-    /// Anything that changes when a burst should happen. A count of registered items is
-    /// the usual choice.
+    /// Anything that changes when a burst should happen. A count of registered items is the
+    /// usual choice.
     let trigger: Int
-    var pieceCount: Int = 26
+    var pieceCount: Int = 70
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var pieces: [Piece] = []
@@ -21,31 +24,52 @@ struct ConfettiBurst: View {
 
     var body: some View {
         GeometryReader { geometry in
-            ZStack {
+            ZStack(alignment: .topLeading) {
                 ForEach(pieces) { piece in
                     piece.shape
                         .fill(piece.color)
                         .frame(width: piece.size.width, height: piece.size.height)
-                        .rotationEffect(.degrees(piece.rotation + piece.spin * progress))
-                        .offset(
-                            x: piece.direction.dx * piece.distance * progress,
-                            // Squared so the pieces slow outward and fall, rather than
-                            // travelling in a straight line like sparks.
-                            y: piece.direction.dy * piece.distance * progress + piece.gravity * progress * progress
+                        .rotation3DEffect(
+                            // Flipping as it falls, so a flat rectangle reads as paper
+                            // rather than a sliding tile.
+                            .degrees(piece.flip * progress),
+                            axis: (x: 1, y: 0.4, z: 0)
                         )
-                        .opacity(opacity)
-                        .position(x: geometry.size.width / 2, y: geometry.size.height / 2)
+                        .rotationEffect(.degrees(piece.rotation + piece.spin * progress))
+                        .position(
+                            x: piece.x * geometry.size.width + sway(piece),
+                            // From just above the top to just past the bottom, so no piece
+                            // appears or vanishes mid-screen.
+                            y: -40 + (geometry.size.height + 120) * eased(piece)
+                        )
+                        .opacity(opacity(piece))
                 }
             }
+            .ignoresSafeArea()
         }
+        .ignoresSafeArea()
         .allowsHitTesting(false)
         .onChange(of: trigger) { _, _ in fire() }
     }
 
-    /// Full for most of the flight, then out. Fading from the start would make the burst
-    /// read as a fizzle.
-    private var opacity: Double {
-        progress < 0.6 ? 1 : max(0, 1 - (progress - 0.6) / 0.4)
+    /// Pieces start at slightly different times and fall at different speeds, which is what
+    /// keeps a burst from looking like a single falling sheet.
+    private func eased(_ piece: Piece) -> Double {
+        let local = (progress - piece.delay) / (1 - piece.delay)
+        guard local > 0 else { return 0 }
+        return min(1, local * piece.speed)
+    }
+
+    /// Side to side drift, because paper does not fall in a straight line.
+    private func sway(_ piece: Piece) -> CGFloat {
+        piece.swayWidth * CGFloat(sin(eased(piece) * piece.swayCycles * 2 * .pi))
+    }
+
+    private func opacity(_ piece: Piece) -> Double {
+        let local = eased(piece)
+        guard local > 0 else { return 0 }
+        // Full for most of the fall, then out near the bottom.
+        return local < 0.75 ? 1 : max(0, 1 - (local - 0.75) / 0.25)
     }
 
     private func fire() {
@@ -53,19 +77,23 @@ struct ConfettiBurst: View {
 
         pieces = (0..<pieceCount).map { _ in Piece.random() }
         progress = 0
-        withAnimation(.easeOut(duration: 1.1)) { progress = 1 }
+        withAnimation(.easeIn(duration: 1.8)) { progress = 1 }
     }
 
     /// One piece of paper, with everything about it decided before it starts moving so the
     /// animation itself has nothing to compute.
     fileprivate struct Piece: Identifiable {
         let id = UUID()
-        let direction: CGVector
-        let distance: CGFloat
-        let gravity: CGFloat
+        /// Horizontal position as a fraction of the width, so it scales to any screen.
+        let x: CGFloat
         let size: CGSize
         let rotation: Double
         let spin: Double
+        let flip: Double
+        let delay: Double
+        let speed: Double
+        let swayWidth: CGFloat
+        let swayCycles: Double
         let color: Color
         let isRound: Bool
 
@@ -73,47 +101,42 @@ struct ConfettiBurst: View {
             isRound ? AnyShape(Circle()) : AnyShape(RoundedRectangle(cornerRadius: 1, style: .continuous))
         }
 
-        /// Ink and the success green only. The app has no other colours, and confetti in
-        /// hues that appear nowhere else would look like it came from another app.
+        /// A confetti palette, and the only colours in the app that do not carry meaning.
         private static let colors: [Color] = [
-            DesignSystem.Ink.ink900,
-            DesignSystem.Ink.ink700,
-            DesignSystem.Ink.ink300,
-            DesignSystem.Feedback.success,
-            DesignSystem.Feedback.success.opacity(0.6),
+            Color(red: 0.95, green: 0.31, blue: 0.36),
+            Color(red: 0.98, green: 0.71, blue: 0.20),
+            Color(red: 0.99, green: 0.88, blue: 0.29),
+            Color(red: 0.30, green: 0.76, blue: 0.51),
+            Color(red: 0.25, green: 0.60, blue: 0.94),
+            Color(red: 0.62, green: 0.42, blue: 0.92),
+            Color(red: 0.98, green: 0.51, blue: 0.72),
         ]
 
         static func random() -> Piece {
-            let angle = Double.random(in: 0..<(2 * .pi))
-            // Biased upward: paper thrown into the air, not an explosion in every direction.
-            let lift = Double.random(in: 0.3...1)
-
-            return Piece(
-                direction: CGVector(dx: cos(angle), dy: sin(angle) * lift - 0.35),
-                distance: CGFloat.random(in: 60...150),
-                gravity: CGFloat.random(in: 90...170),
+            Piece(
+                x: CGFloat.random(in: 0...1),
                 size: CGSize(
-                    width: CGFloat.random(in: 4...7),
-                    height: CGFloat.random(in: 4...11)
+                    width: CGFloat.random(in: 6...10),
+                    height: CGFloat.random(in: 8...15)
                 ),
                 rotation: Double.random(in: 0..<360),
-                spin: Double.random(in: -320...320),
-                color: colors.randomElement() ?? DesignSystem.Ink.ink900,
-                isRound: Bool.random()
+                spin: Double.random(in: -420...420),
+                flip: Double.random(in: 180...720),
+                // Staggered starts spread the burst over the first third of the fall.
+                delay: Double.random(in: 0...0.35),
+                speed: Double.random(in: 0.75...1.3),
+                swayWidth: CGFloat.random(in: 10...45),
+                swayCycles: Double.random(in: 0.8...2.2),
+                color: colors.randomElement() ?? .orange,
+                isRound: Double.random(in: 0...1) < 0.25
             )
         }
     }
 }
 
-/// A direction, since `CGVector` is not in the standard library.
-struct CGVector {
-    var dx: CGFloat
-    var dy: CGFloat
-}
-
 extension View {
-    /// Fires confetti over this view whenever `trigger` changes.
+    /// Rains confetti over the whole screen whenever `trigger` changes.
     func confetti(trigger: Int) -> some View {
-        overlay(ConfettiBurst(trigger: trigger))
+        overlay { ConfettiBurst(trigger: trigger) }
     }
 }

@@ -10,6 +10,7 @@ final class BudgetViewModel {
     private let progress: BudgetProgressCalculating
     private let planStore: PlanStore
     private let preferences: PlanPreferencing
+    private let rebalancer: BudgetRebalancing
     private let dateProvider: DateProviding
 
     init(
@@ -17,12 +18,14 @@ final class BudgetViewModel {
         progress: BudgetProgressCalculating,
         planStore: PlanStore,
         preferences: PlanPreferencing,
+        rebalancer: BudgetRebalancing = BudgetRebalancer(),
         dateProvider: DateProviding = SystemDateProvider()
     ) {
         self.categories = categories
         self.progress = progress
         self.planStore = planStore
         self.preferences = preferences
+        self.rebalancer = rebalancer
         self.dateProvider = dateProvider
     }
 
@@ -60,6 +63,37 @@ final class BudgetViewModel {
     /// What raising or lowering a category budget does to the freedom date.
     func impact(ofSetting amount: Money, forKey key: String) -> PlanImpact {
         planStore.impact(of: .changeCategoryBudget(key: key, to: amount)).impact
+    }
+
+    // MARK: - Paying for an increase
+    //
+    // Raising a category has to come from somewhere. The app works out the alternative to
+    // moving the date and lets the user pick, rather than deciding for them.
+
+    /// Where the money for a bigger budget could come from, if the date is to stay put.
+    func rebalance(raising key: String, to amount: Money) -> BudgetRebalance {
+        rebalancer.rebalance(raising: key, to: amount, in: plan, snapshot: planStore.snapshot)
+    }
+
+    /// Takes the increase and lets the date move. The plan absorbs it on its own, since the
+    /// extra debt payment is whatever survives the budgets.
+    func acceptLaterDate(raising key: String, to amount: Money) {
+        setBudget(amount, forKey: key)
+    }
+
+    /// Takes the increase and holds the date by pinning the offsetting cuts.
+    ///
+    /// The cuts are pinned rather than merely suggested, because a plan that recalculates
+    /// would otherwise hand the slack straight back and the date would move anyway.
+    func keepDate(raising key: String, to amount: Money, using rebalance: BudgetRebalance) {
+        guard rebalance.isPossible else { return }
+
+        for cut in rebalance.cuts {
+            categories.category(forKey: cut.categoryKey)?.budgetOverride = cut.to
+        }
+        categories.category(forKey: key)?.budgetOverride = amount
+        categories.save()
+        planStore.refresh()
     }
 
     /// Pins a budget the user chose. Plans stop scaling it from then on.
