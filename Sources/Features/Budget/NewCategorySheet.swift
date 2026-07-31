@@ -17,65 +17,51 @@ struct NewCategorySheet: View {
     private let icons = ["tag", "cart", "car", "house", "heart", "book", "gift", "pawprint", "wrench", "airplane", "gamecontroller", "cup.and.saucer"]
 
     var body: some View {
-        NavigationStack {
-            Form {
-                Section {
-                    TextField("Nombre", text: $name)
-                    MoneyField(title: "Presupuesto mensual aproximado", amount: $baseline, currency: currency)
-                }
+        ModalScaffold(
+            title: "Nueva categoría",
+            primary: ModalAction("Crear", isEnabled: !name.trimmingCharacters(in: .whitespaces).isEmpty) {
+                onSave(name, icon, flexibility, baseline)
+                dismiss()
+            }
+        ) {
+            CardSection {
+                CeroTextField(title: "Nombre", text: $name, placeholder: "Mascota")
+                MoneyField(title: "Presupuesto mensual aproximado", amount: $baseline, currency: currency)
+            }
 
-                Section("Icono") {
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 44))], spacing: Layout.gap) {
-                        ForEach(icons, id: \.self) { candidate in
-                            Button {
-                                icon = candidate
-                            } label: {
-                                Image(systemName: candidate)
-                                    .font(.system(size: 18))
-                                    .foregroundStyle(icon == candidate ? .white : Palette.secondaryText)
-                                    .frame(width: 40, height: 40)
-                                    .background(
-                                        icon == candidate ? Palette.accent : Palette.surfaceMuted,
-                                        in: RoundedRectangle(cornerRadius: Layout.chipRadius)
-                                    )
-                            }
-                            .buttonStyle(.plain)
+            CardSection(header: "Icono") {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 44))], spacing: Layout.gap) {
+                    ForEach(icons, id: \.self) { candidate in
+                        Button {
+                            withAnimation(DesignSystem.Motion.tap) { icon = candidate }
+                        } label: {
+                            Image(systemName: candidate)
+                                .font(.system(size: 18))
+                                .foregroundStyle(icon == candidate ? Palette.invertedText : Palette.secondaryText)
+                                .frame(width: 44, height: 44)
+                                .background(
+                                    icon == candidate ? Palette.accent : Palette.surfaceMuted,
+                                    in: Circle()
+                                )
                         }
+                        .buttonStyle(.plain)
                     }
-                    .padding(.vertical, Layout.tightGap)
-                }
-
-                Section {
-                    Picker("Tipo", selection: $flexibility) {
-                        ForEach([CategoryFlexibility.essential, .discretionary], id: \.self) { option in
-                            Text(option.label).tag(option)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                } header: {
-                    Text("¿Qué tan flexible es?")
-                } footer: {
-                    Text(
-                        flexibility == .essential
-                            ? "Los planes rápidos casi no la recortan. Úsalo para lo que necesitas para funcionar."
-                            : "Los planes rápidos la recortan bastante. Úsalo para gustos y entretenimiento."
-                    )
                 }
             }
-            .navigationTitle("Nueva categoría")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancelar") { dismiss() }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Crear") {
-                        onSave(name, icon, flexibility, baseline)
-                        dismiss()
-                    }
-                    .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty)
-                }
+
+            CardSection(
+                header: "¿Qué tan flexible es?",
+                footer: flexibility == .essential
+                    ? "Los planes rápidos casi no la recortan. Úsalo para lo que necesitas para funcionar."
+                    : "Los planes rápidos la recortan bastante. Úsalo para gustos y entretenimiento."
+            ) {
+                SegmentedSelector(
+                    selection: $flexibility,
+                    options: [.essential, .discretionary],
+                    label: \.label
+                )
             }
         }
+        .modalPresentation()
     }
 }

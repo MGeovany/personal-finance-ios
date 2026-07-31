@@ -25,7 +25,7 @@ struct GoalCardView: View {
                         .foregroundStyle(Palette.tertiaryText)
                     Spacer()
                     Text("\(Int((goal.progress * 100).rounded()))%")
-                        .font(Typography.caption.weight(.medium))
+                        .font(Typography.captionStrong)
                         .foregroundStyle(Palette.secondaryText)
                 }
 

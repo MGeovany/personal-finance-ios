@@ -22,6 +22,12 @@ struct BudgetView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: Layout.gap) {
+                ScreenHeader(title: "Presupuesto") {
+                    IconButton(systemImage: "plus", label: "Nueva categoría", isProminent: true) {
+                        showsNewCategory = true
+                    }
+                }
+
                 monthCard
                 weeksCard
 
@@ -44,8 +50,7 @@ struct BudgetView: View {
             }
             .padding(Layout.gutter)
         }
-        .background(Palette.canvas)
-        .navigationTitle("Presupuesto")
+        .screenSurface()
         .sheet(item: $editingCategory) { consumption in
             CategoryBudgetSheet(consumption: consumption, model: model, dependencies: dependencies)
         }

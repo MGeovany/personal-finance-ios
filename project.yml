@@ -19,6 +19,8 @@ targets:
     platform: iOS
     sources:
       - path: Sources
+      - path: Sources/Resources/Fonts
+        buildPhase: resources
     info:
       path: Sources/App/Info.plist
       properties:
@@ -28,15 +30,43 @@ targets:
           - UIInterfaceOrientationPortrait
         UIApplicationSceneManifest:
           UIApplicationSupportsMultipleScenes: false
+        # The interface is a single white monochrome surface; a dark variant would
+        # be a different design, not an inversion of this one.
+        UIUserInterfaceStyle: Light
+        UIAppFonts:
+          - Inter-Light.ttf
+          - Inter-Regular.ttf
+          - Inter-Medium.ttf
+          - Inter-SemiBold.ttf
+          - Inter-Bold.ttf
+          - InterDisplay-Regular.ttf
+          - InterDisplay-SemiBold.ttf
+          - InterDisplay-Bold.ttf
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.mgeovany.cero
-        INFOPLIST_KEY_UIUserInterfaceStyle: Automatic
+
+  CeroTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: CeroTests
+    dependencies:
+      - target: Cero
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.mgeovany.cero.tests
+        GENERATE_INFOPLIST_FILE: YES
 
 schemes:
   Cero:
     build:
       targets:
         Cero: all
+        CeroTests: [test]
     run:
       config: Debug
+    test:
+      config: Debug
+      targets:
+        - CeroTests

@@ -15,7 +15,7 @@ enum CurrencyCode: String, CaseIterable, Codable, Identifiable, Sendable {
 
     var symbol: String {
         switch self {
-        case .hnl: "L"
+        case .hnl: "HNL"
         case .usd: "USD"
         case .eur: "€"
         case .mxn: "MX$"

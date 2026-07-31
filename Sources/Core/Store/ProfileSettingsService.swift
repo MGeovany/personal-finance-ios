@@ -12,6 +12,7 @@ protocol PlanPreferencing {
     func select(strategy: PayoffStrategy)
     func setTargetDate(_ date: Date?)
     func setGroceryMode(_ mode: GroceryMode, mainShare: Double)
+    func setDisplayName(_ name: String)
     func setCurrency(_ currency: CurrencyCode)
     func setPrimaryIncome(_ amount: Money)
     func setEmergencyFund(_ amount: Money)
@@ -51,6 +52,10 @@ struct ProfileSettingsService: PlanPreferencing {
             $0.groceryMode = mode
             $0.groceryMainShare = mainShare
         }
+    }
+
+    func setDisplayName(_ name: String) {
+        update { $0.displayName = name.trimmingCharacters(in: .whitespacesAndNewlines) }
     }
 
     func setCurrency(_ currency: CurrencyCode) {

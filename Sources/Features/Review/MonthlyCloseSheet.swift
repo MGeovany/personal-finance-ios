@@ -12,39 +12,28 @@ struct MonthlyCloseSheet: View {
     }
 
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(spacing: Layout.gap) {
-                    flowCard
-                    debtCard
-                    planCard
+        ModalScaffold(
+            title: "Cierre mensual",
+            primary: ModalAction("Cerrar el mes") {
+                model.complete()
+                dismiss()
+            },
+            spacing: Layout.gap
+        ) {
+            flowCard
+            debtCard
+            planCard
 
-                    if model.surplus > 0 {
-                        SurplusDestinationPicker(
-                            surplus: model.surplus,
-                            selection: $model.surplusDestination,
-                            money: dependencies.money,
-                            currency: model.currency
-                        )
-                    }
-
-                    Button("Cerrar el mes") {
-                        model.complete()
-                        dismiss()
-                    }
-                    .primaryButton()
-                }
-                .padding(Layout.gutter)
-            }
-            .background(Palette.canvas)
-            .navigationTitle("Cierre mensual")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cerrar") { dismiss() }
-                }
+            if model.surplus > 0 {
+                SurplusDestinationPicker(
+                    surplus: model.surplus,
+                    selection: $model.surplusDestination,
+                    money: dependencies.money,
+                    currency: model.currency
+                )
             }
         }
+        .modalPresentation()
     }
 
     private var flowCard: some View {

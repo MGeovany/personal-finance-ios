@@ -33,6 +33,7 @@ final class AppDependencies {
     let money: MoneyFormatting
     let dates: PlanDateFormatting
     let monthKeys: MonthKeyFormatter
+    let exchangeRates: ExchangeRateProviding
 
     init(container: ModelContainer, notifications: PlanNotificationScheduling = PlanNotificationScheduler()) {
         self.container = container
@@ -58,6 +59,9 @@ final class AppDependencies {
         self.reviews = ReviewRepository(context: context)
         self.notifications = notifications
 
+        let exchangeRates = StaticExchangeRateProvider()
+        self.exchangeRates = exchangeRates
+
         let assembler = SnapshotAssembler(
             profiles: profiles,
             incomes: incomes,
@@ -68,7 +72,8 @@ final class AppDependencies {
             categories: categories,
             goals: goals,
             expenses: expenses,
-            history: CategoryHistoryCalculator(expenses: expenses)
+            history: CategoryHistoryCalculator(expenses: expenses),
+            rates: exchangeRates
         )
 
         let planStore = PlanStore(assembler: assembler, profiles: profiles)

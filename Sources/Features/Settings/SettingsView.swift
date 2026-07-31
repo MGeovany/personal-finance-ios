@@ -13,26 +13,32 @@ struct SettingsView: View {
     private var planStore: PlanStore { dependencies.planStore }
 
     var body: some View {
-        List {
-            planSection
-            toolsSection
-            moneySection
-            catalogSection
-            remindersSection
-            closesSection
+        ScrollView {
+            VStack(alignment: .leading, spacing: Layout.sectionGap) {
+                ScreenHeader(title: "Ajustes")
 
-            #if DEBUG
-            DeveloperSection(dependencies: dependencies)
-            #endif
+                planSection
+                toolsSection
+                moneySection
+                catalogSection
+                remindersSection
+                closesSection
+
+                #if DEBUG
+                DeveloperSection(dependencies: dependencies)
+                #endif
+            }
+            .padding(.horizontal, Layout.gutter)
+            .padding(.bottom, Layout.sectionGap)
         }
-        .navigationTitle("Ajustes")
+        .screenSurface()
         .sheet(isPresented: $showsWeeklyClose) {
             WeeklyCloseSheet(dependencies: dependencies)
         }
         .sheet(isPresented: $showsMonthlyClose) {
             MonthlyCloseSheet(dependencies: dependencies)
         }
-        .sheet(item: $renamingSpeed) { speed in
+        .drawer(item: $renamingSpeed) { speed in
             RenamePlanSheet(
                 speed: speed,
                 currentName: profile.name(for: speed)
@@ -45,91 +51,126 @@ struct SettingsView: View {
     // MARK: - Sections
 
     private var planSection: some View {
-        Section("Tu plan") {
+        CardSection(header: "Tu plan") {
             NavigationLink {
                 PlanComparisonView(dependencies: dependencies)
             } label: {
-                LabeledContent("Plan activo", value: planStore.activePlan.name)
+                NavRow(title: "Plan activo", value: planStore.activePlan.name)
             }
+            .buttonStyle(.plain)
+
+            RowDivider()
 
             NavigationLink {
                 TargetDateView(dependencies: dependencies)
             } label: {
-                LabeledContent(
-                    "Fecha objetivo",
+                NavRow(
+                    title: "Fecha objetivo",
                     value: profile.targetDate.map(dependencies.dates.monthAndYear) ?? "Sin definir"
                 )
             }
+            .buttonStyle(.plain)
+
+            RowDivider()
 
             ForEach(PlanSpeed.displayOrder) { speed in
                 Button {
                     renamingSpeed = speed
                 } label: {
-                    LabeledContent(profile.name(for: speed)) {
-                        Text("Renombrar").foregroundStyle(Palette.accent)
+                    HStack {
+                        Text(profile.name(for: speed))
+                            .font(Typography.bodyStrong)
+                            .foregroundStyle(Palette.primaryText)
+                        Spacer(minLength: DesignSystem.Space.s)
+                        Text("Renombrar")
+                            .font(Typography.label)
+                            .foregroundStyle(Palette.secondaryText)
                     }
+                    .frame(minHeight: Layout.minimumTouch)
+                    .contentShape(.rect)
                 }
+                .buttonStyle(.plain)
             }
         }
     }
 
     private var toolsSection: some View {
-        Section("Herramientas") {
+        CardSection(header: "Herramientas") {
             NavigationLink {
                 SimulatorView(dependencies: dependencies)
             } label: {
-                Label("¿Qué pasa si...?", systemImage: "wand.and.stars")
+                NavRow(title: "¿Qué pasa si...?", icon: "wand.and.stars")
             }
+            .buttonStyle(.plain)
         }
     }
 
     private var moneySection: some View {
-        Section("Tu dinero") {
-            LabeledContent(
-                "Ingreso mensual",
+        CardSection(header: "Tu dinero") {
+            DetailRow(
+                label: "Ingreso mensual",
                 value: dependencies.money.string(profile.primaryIncome, currency: profile.currency)
             )
-            LabeledContent(
-                "Fondo de emergencia",
+            DetailRow(
+                label: "Fondo de emergencia",
                 value: dependencies.money.string(profile.emergencyFund, currency: profile.currency)
             )
-            LabeledContent(
-                "Ahorros",
+            DetailRow(
+                label: "Ahorros",
                 value: dependencies.money.string(profile.savings, currency: profile.currency)
             )
+            DetailRow(
+                label: "Moneda",
+                value: profile.currency.rawValue
+            )
+
+            RowDivider()
+
             NavigationLink {
                 MoneyEditorView(dependencies: dependencies)
             } label: {
-                Text("Editar montos")
+                NavRow(title: "Editar montos")
             }
-            LabeledContent("Moneda", value: "\(profile.currency.symbol) · \(profile.currency.rawValue)")
+            .buttonStyle(.plain)
         }
     }
 
     private var catalogSection: some View {
-        Section("Compromisos") {
+        CardSection(header: "Compromisos") {
             NavigationLink {
                 UtilitiesView(dependencies: dependencies)
             } label: {
-                Label("Servicios públicos", systemImage: "bolt")
+                NavRow(title: "Servicios públicos", icon: "bolt")
             }
+            .buttonStyle(.plain)
+
+            RowDivider()
+
             NavigationLink {
                 SubscriptionsView(dependencies: dependencies)
             } label: {
-                Label("Suscripciones", systemImage: "repeat")
+                NavRow(title: "Suscripciones", icon: "repeat")
             }
+            .buttonStyle(.plain)
+
+            RowDivider()
+
             NavigationLink {
                 FixedExpensesView(dependencies: dependencies)
             } label: {
-                Label("Gastos fijos", systemImage: "house")
+                NavRow(title: "Gastos fijos", icon: "house")
             }
+            .buttonStyle(.plain)
         }
     }
 
     private var remindersSection: some View {
-        Section {
-            Toggle(
-                "Recordatorios",
+        CardSection(
+            header: "Recordatorios",
+            footer: "Cada noche te preguntamos si ya agregaste tus gastos. También te avisamos de fechas de pago, cortes y cobros próximos."
+        ) {
+            CeroToggle(
+                title: "Recordatorios",
                 isOn: Binding(
                     get: { profile.notificationsEnabled },
                     set: { enabled in
@@ -143,9 +184,11 @@ struct SettingsView: View {
             )
 
             if profile.notificationsEnabled {
-                DatePicker(
-                    "Hora del recordatorio",
-                    selection: Binding(
+                RowDivider()
+
+                TimeRow(
+                    title: "Hora",
+                    time: Binding(
                         get: { reminderDate },
                         set: { date in
                             let parts = Calendar.current.dateComponents([.hour, .minute], from: date)
@@ -155,21 +198,18 @@ struct SettingsView: View {
                                 enabled: true
                             )
                         }
-                    ),
-                    displayedComponents: .hourAndMinute
+                    )
                 )
             }
-        } header: {
-            Text("Recordatorios")
-        } footer: {
-            Text("Cada noche te preguntamos si ya agregaste tus gastos. También te avisamos de fechas de pago, cortes y cobros próximos.")
         }
     }
 
     private var closesSection: some View {
-        Section("Cierres") {
+        CardSection(header: "Cierres") {
             Button("Cierre semanal") { showsWeeklyClose = true }
+                .secondaryButton()
             Button("Cierre mensual") { showsMonthlyClose = true }
+                .secondaryButton()
         }
     }
 
@@ -184,6 +224,8 @@ struct SettingsView: View {
 }
 
 /// Renames a plan. The three speeds keep their behaviour; only the label changes.
+///
+/// One field and one sentence of context, which is exactly what a drawer is for.
 struct RenamePlanSheet: View {
     let speed: PlanSpeed
     let currentName: String
@@ -200,27 +242,16 @@ struct RenamePlanSheet: View {
     }
 
     var body: some View {
-        NavigationStack {
-            Form {
-                Section {
-                    TextField(speed.defaultName, text: $name)
-                } footer: {
-                    Text(speed.shortDescription)
-                }
+        Drawer(title: "Renombrar plan", message: speed.shortDescription, cancelTitle: "Cancelar") {
+            CardContainer {
+                CeroTextField(title: "Nombre", text: $name, placeholder: speed.defaultName)
             }
-            .navigationTitle("Renombrar plan")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancelar") { dismiss() }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Guardar") {
-                        onSave(name)
-                        dismiss()
-                    }
-                }
+
+            Button("Guardar") {
+                onSave(name)
+                dismiss()
             }
+            .primaryButton()
         }
     }
 }

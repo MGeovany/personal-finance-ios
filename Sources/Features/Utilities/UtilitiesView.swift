@@ -6,6 +6,7 @@ struct UtilitiesView: View {
     @State private var model: UtilitiesViewModel
     @State private var editing: ChargeDraft?
     @State private var settling: UtilityEntity?
+    @State private var deleting: UtilityEntity?
 
     init(dependencies: AppDependencies) {
         self.dependencies = dependencies
@@ -22,6 +23,12 @@ struct UtilitiesView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: Layout.gap) {
+                DetailHeader(title: "Servicios") {
+                    IconButton(systemImage: "plus", label: "Agregar servicio", isProminent: true) {
+                        editing = ChargeDraft(currency: model.currency)
+                    }
+                }
+
                 summaryCard
 
                 ForEach(model.allUtilities) { utility in
@@ -47,8 +54,7 @@ struct UtilitiesView: View {
             }
             .padding(Layout.gutter)
         }
-        .background(Palette.canvas)
-        .navigationTitle("Servicios")
+        .screenSurface()
         .sheet(item: $editing) { draft in
             ChargeEditorSheet(purpose: .utility, draft: draft, currencies: CurrencyCode.allCases) { saved in
                 if model.allUtilities.contains(where: { $0.uuid == saved.id }) {
@@ -66,6 +72,14 @@ struct UtilitiesView: View {
             ) { actual, paidByOther, destination in
                 model.settle(utility, actual: actual, paidBySomeoneElse: paidByOther, destination: destination)
             }
+        }
+        .confirmationDrawer(
+            item: $deleting,
+            title: { "¿Eliminar \($0.name)?" },
+            message: { _ in "Se deja de reservar dinero para este servicio cada mes." },
+            confirmTitle: "Eliminar"
+        ) { utility in
+            model.delete(utility)
         }
     }
 
@@ -145,7 +159,7 @@ struct UtilitiesView: View {
         }
         .contextMenu {
             Button("Editar") { editing = ChargeDraft(utility) }
-            Button("Eliminar", role: .destructive) { model.delete(utility) }
+            Button("Eliminar", role: .destructive) { deleting = utility }
         }
     }
 

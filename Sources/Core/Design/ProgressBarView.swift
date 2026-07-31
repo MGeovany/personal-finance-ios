@@ -10,7 +10,7 @@ struct ProgressBarView: View {
     var body: some View {
         GeometryReader { geometry in
             ZStack(alignment: .leading) {
-                Capsule().fill(Palette.surfaceMuted)
+                Capsule().fill(Palette.surfaceSunken)
                 Capsule()
                     .fill(tint)
                     .frame(width: max(0, min(1, fraction)) * geometry.size.width)

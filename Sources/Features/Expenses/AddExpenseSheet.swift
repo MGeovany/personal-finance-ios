@@ -20,63 +20,58 @@ struct AddExpenseSheet: View {
     }
 
     var body: some View {
-        NavigationStack {
-            Group {
-                if let outcome = model.outcome {
-                    ExpenseOutcomeView(
-                        outcome: outcome,
-                        categoryName: categoryName,
-                        amount: model.draft.amount,
-                        dependencies: dependencies,
-                        onAddAnother: { model.reset() },
-                        onDone: { dismiss() }
-                    )
-                } else {
-                    form
-                }
-            }
-            .navigationTitle(model.outcome == nil ? "Agregar gasto" : "Registrado")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                if model.outcome == nil {
-                    ToolbarItem(placement: .cancellationAction) {
-                        Button("Cancelar") { dismiss() }
-                    }
-                    ToolbarItem(placement: .confirmationAction) {
-                        Button("Guardar") { model.save() }
-                            .disabled(!model.canSave)
-                    }
-                }
+        Group {
+            if let outcome = model.outcome {
+                ExpenseOutcomeView(
+                    outcome: outcome,
+                    categoryName: categoryName,
+                    amount: model.draft.amount,
+                    dependencies: dependencies,
+                    onAddAnother: { model.reset() },
+                    onDone: { dismiss() }
+                )
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(Palette.canvas)
+            } else {
+                form
             }
         }
+        .modalPresentation()
     }
 
     private var form: some View {
-        Form {
-            Section {
+        ModalScaffold(
+            title: "Agregar gasto",
+            primary: ModalAction("Guardar", isEnabled: model.canSave) { model.save() }
+        ) {
+            CardSection {
                 MoneyField(title: "Monto", amount: $model.draft.amount, currency: model.draft.currency)
-                TextField("Comercio", text: $model.draft.merchant)
-                DatePicker("Fecha", selection: $model.draft.date, displayedComponents: .date)
+                CeroTextField(title: "Comercio", text: $model.draft.merchant, placeholder: "Supermercado")
+                RowDivider()
+                DateRow(title: "Fecha", date: $model.draft.date)
             }
 
-            Section("Categoría") {
-                Picker("Categoría", selection: $model.draft.categoryKey) {
-                    ForEach(model.availableCategories) { category in
-                        Label(category.name, systemImage: category.icon).tag(category.key)
-                    }
-                }
-                .pickerStyle(.navigationLink)
+            CardSection(header: "Categoría") {
+                SelectRow(
+                    title: "Categoría",
+                    selection: $model.draft.categoryKey,
+                    options: model.availableCategories.map(\.key),
+                    label: { key in model.availableCategories.first { $0.key == key }?.name ?? key },
+                    icon: { key in model.availableCategories.first { $0.key == key }?.icon }
+                )
             }
 
-            Section("Forma de pago") {
-                Picker("Forma de pago", selection: $model.draft.paymentMethod) {
-                    ForEach(PaymentMethod.allCases) { method in
-                        Label(method.label, systemImage: method.icon).tag(method)
-                    }
-                }
-                .pickerStyle(.navigationLink)
+            CardSection(header: "Forma de pago") {
+                SelectRow(
+                    title: "Pagué con",
+                    selection: $model.draft.paymentMethod,
+                    options: PaymentMethod.allCases,
+                    label: \.label,
+                    icon: { $0.icon }
+                )
 
                 if model.draft.paymentMethod == .creditCard {
+                    RowDivider()
                     cardPicker
                 }
             }
@@ -85,13 +80,14 @@ struct AddExpenseSheet: View {
                 backingSection
             }
 
-            Section {
-                Toggle("Es un gasto recurrente", isOn: $model.draft.isRecurring)
-                TextField("Nota (opcional)", text: $model.draft.note)
+            CardSection {
+                CeroToggle(title: "Es un gasto recurrente", isOn: $model.draft.isRecurring)
+                RowDivider()
+                CeroTextField(title: "Nota", text: $model.draft.note, placeholder: "Opcional")
             }
 
             if let impact = model.projectedImpact, impact.movesDate || impact.breaksPlan {
-                Section {
+                CardSection(header: "Si registras este gasto") {
                     ImpactBadge(
                         impact: impact,
                         dates: dependencies.dates,
@@ -99,49 +95,42 @@ struct AddExpenseSheet: View {
                         currency: model.currency,
                         money: dependencies.money
                     )
-                } header: {
-                    Text("Si registras este gasto")
                 }
             }
         }
     }
 
+    @ViewBuilder
     private var cardPicker: some View {
-        Group {
-            if model.availableCards.isEmpty {
-                Text("No tienes tarjetas disponibles para gastar.")
-                    .font(Typography.caption)
-                    .foregroundStyle(Palette.tertiaryText)
-            } else {
-                Picker("Tarjeta", selection: Binding(
+        if model.availableCards.isEmpty {
+            Text("No tienes tarjetas disponibles para gastar.")
+                .font(Typography.caption)
+                .foregroundStyle(Palette.tertiaryText)
+        } else {
+            SelectRow(
+                title: "Tarjeta",
+                selection: Binding(
                     get: { model.draft.debtID ?? model.availableCards.first?.uuid },
                     set: { model.draft.debtID = $0 }
-                )) {
-                    ForEach(model.availableCards) { card in
-                        Text(card.name).tag(Optional(card.uuid))
-                    }
-                }
-                .pickerStyle(.navigationLink)
-            }
+                ),
+                options: model.availableCards.map { Optional($0.uuid) },
+                label: { id in model.availableCards.first { $0.uuid == id }?.name ?? "Elegir" }
+            )
         }
     }
 
     /// The question that keeps credit from being mistaken for money.
     private var backingSection: some View {
-        Section {
-            Picker("", selection: $model.draft.hasMoneySetAside) {
-                Text("Sí, ya lo tengo").tag(true)
-                Text("No").tag(false)
-            }
-            .pickerStyle(.segmented)
-            .labelsHidden()
-        } header: {
-            Text("¿Ya tienes el dinero para esta compra?")
-        } footer: {
-            Text(
-                model.draft.hasMoneySetAside
-                    ? "Vamos a reservar ese dinero para pagar la tarjeta antes de la fecha límite. Dejará de aparecer como disponible."
-                    : "Se va a sumar a tu deuda y generará intereses. Te mostramos cuánto mueve tu fecha."
+        CardSection(
+            header: "¿Ya tienes el dinero para esta compra?",
+            footer: model.draft.hasMoneySetAside
+                ? "Vamos a reservar ese dinero para pagar la tarjeta antes de la fecha límite. Dejará de aparecer como disponible."
+                : "Se va a sumar a tu deuda y generará intereses. Te mostramos cuánto mueve tu fecha."
+        ) {
+            SegmentedSelector(
+                selection: $model.draft.hasMoneySetAside,
+                options: [true, false],
+                label: { $0 ? "Sí, ya lo tengo" : "No" }
             )
         }
     }

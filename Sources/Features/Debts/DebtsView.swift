@@ -5,6 +5,7 @@ struct DebtsView: View {
     let dependencies: AppDependencies
     @State private var model: DebtsViewModel
     @State private var editing: DebtDraft?
+    @State private var deleting: DebtEntity?
     @State private var showsStrategy = false
 
     init(dependencies: AppDependencies) {
@@ -21,6 +22,12 @@ struct DebtsView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: Layout.gap) {
+                ScreenHeader(title: "Deudas") {
+                    IconButton(systemImage: "plus", label: "Agregar deuda", isProminent: true) {
+                        editing = DebtDraft(currency: model.currency)
+                    }
+                }
+
                 summaryCard
                 strategyCard
 
@@ -41,7 +48,7 @@ struct DebtsView: View {
                     .buttonStyle(.plain)
                     .contextMenu {
                         Button("Editar") { editing = DebtDraft(debt) }
-                        Button("Eliminar", role: .destructive) { model.delete(debt) }
+                        Button("Eliminar", role: .destructive) { deleting = debt }
                     }
                 }
 
@@ -64,8 +71,7 @@ struct DebtsView: View {
             }
             .padding(Layout.gutter)
         }
-        .background(Palette.canvas)
-        .navigationTitle("Deudas")
+        .screenSurface()
         .sheet(item: $editing) { draft in
             DebtEditorSheet(
                 draft: draft,
@@ -78,6 +84,14 @@ struct DebtsView: View {
                     model.update(saved)
                 }
             }
+        }
+        .confirmationDrawer(
+            item: $deleting,
+            title: { "¿Eliminar \($0.name)?" },
+            message: { _ in "La deuda sale del plan y se recalculan tus fechas." },
+            confirmTitle: "Eliminar"
+        ) { debt in
+            model.delete(debt)
         }
     }
 

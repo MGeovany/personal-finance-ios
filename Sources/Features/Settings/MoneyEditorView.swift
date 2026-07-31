@@ -23,40 +23,46 @@ struct MoneyEditorView: View {
     }
 
     var body: some View {
-        Form {
-            Section {
-                MoneyField(title: "Ingreso mensual", amount: $income, currency: currency)
-            }
+        ScrollView {
+            VStack(alignment: .leading, spacing: Layout.sectionGap) {
+                DetailHeader(title: "Tu dinero")
 
-            Section {
-                MoneyField(title: "Fondo de emergencia", amount: $emergencyFund, currency: currency)
-                MoneyField(title: "Otros ahorros", amount: $savings, currency: currency)
-            }
+                CardSection {
+                    MoneyField(title: "Ingreso mensual", amount: $income, currency: currency)
+                }
 
-            Section {
-                Picker("Moneda principal", selection: $currency) {
-                    ForEach(CurrencyCode.allCases) { code in
-                        Text("\(code.symbol) · \(code.displayName)").tag(code)
+                CardSection {
+                    MoneyField(title: "Fondo de emergencia", amount: $emergencyFund, currency: currency)
+                    MoneyField(title: "Otros ahorros", amount: $savings, currency: currency)
+                }
+
+                CardSection(
+                    footer: "Los montos en otras monedas se convierten a tu moneda principal para calcular el plan."
+                ) {
+                    SelectRow(
+                        title: "Moneda principal",
+                        selection: $currency,
+                        options: CurrencyCode.allCases,
+                        label: { $0.rawValue },
+                        detail: { $0.displayName }
+                    )
+                }
+
+                CardSection {
+                    NavigationLink {
+                        IncomeListView(dependencies: dependencies)
+                    } label: {
+                        NavRow(title: "Otros ingresos")
                     }
+                    .buttonStyle(.plain)
                 }
-            } footer: {
-                Text("Los montos en otras monedas se convierten a tu moneda principal para calcular el plan.")
-            }
 
-            Section {
-                NavigationLink {
-                    IncomeListView(dependencies: dependencies)
-                } label: {
-                    Text("Otros ingresos")
-                }
-            }
-        }
-        .navigationTitle("Tu dinero")
-        .toolbar {
-            ToolbarItem(placement: .confirmationAction) {
                 Button("Guardar", action: save)
+                    .primaryButton()
             }
+            .padding(Layout.gutter)
         }
+        .screenSurface()
     }
 
     private func save() {

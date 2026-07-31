@@ -41,6 +41,19 @@ struct RootView: View {
 
     @ViewBuilder
     private var content: some View {
+        #if DEBUG
+        if ProcessInfo.processInfo.environment["CERO_GALLERY"] != nil {
+            NavigationStack { ComponentGallery() }
+        } else {
+            phaseContent
+        }
+        #else
+        phaseContent
+        #endif
+    }
+
+    @ViewBuilder
+    private var phaseContent: some View {
         switch dependencies.router.phase {
         case .onboarding:
             OnboardingFlowView(model: onboardingModel, dependencies: dependencies)

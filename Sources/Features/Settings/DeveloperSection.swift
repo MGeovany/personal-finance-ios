@@ -15,42 +15,44 @@ struct DeveloperSection: View {
     }
 
     var body: some View {
-        Section {
-            Button {
+        CardSection(
+            header: "Desarrollo",
+            footer: isStoreEmpty
+                ? "El usuario de prueba solo se carga en una app vacía."
+                : "Ya tienes datos. Bórralos primero si quieres cargar el usuario de prueba."
+        ) {
+            OptionRow(
+                title: "Cargar \(MockUser.name.lowercased())",
+                detail: MockUser.summary
+            ) {
                 dependencies.loadMockUser()
-            } label: {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Cargar \(MockUser.name.lowercased())")
-                    Text(MockUser.summary)
-                        .font(Typography.caption)
-                        .foregroundStyle(Palette.tertiaryText)
-                }
             }
             .disabled(!isStoreEmpty)
+            .opacity(isStoreEmpty ? 1 : 0.4)
 
-            Button("Borrar todos mis datos", role: .destructive) {
+            OptionRow(
+                title: "Borrar todos mis datos",
+                isDestructive: true
+            ) {
                 isConfirmingReset = true
             }
-        } header: {
-            Text("Desarrollo")
-        } footer: {
-            Text(
-                isStoreEmpty
-                    ? "El usuario de prueba solo se carga en una app vacía."
-                    : "Ya tienes datos. Bórralos primero si quieres cargar el usuario de prueba."
-            )
-        }
-        .confirmationDialog(
-            "¿Borrar todos tus datos?",
-            isPresented: $isConfirmingReset,
-            titleVisibility: .visible
-        ) {
-            Button("Borrar todo", role: .destructive) {
-                dependencies.storeResetting.reset()
+
+            RowDivider()
+
+            NavigationLink {
+                ComponentGallery()
+            } label: {
+                NavRow(title: "Componentes", icon: "square.on.square")
             }
-            Button("Cancelar", role: .cancel) {}
-        } message: {
-            Text("Se eliminan tus ingresos, deudas, gastos, servicios, suscripciones y metas. Volverás a la configuración inicial. No se puede deshacer.")
+            .buttonStyle(.plain)
+        }
+        .confirmationDrawer(
+            isPresented: $isConfirmingReset,
+            title: "¿Borrar todos tus datos?",
+            message: "Se eliminan tus ingresos, deudas, gastos, servicios, suscripciones y metas. Volverás a la configuración inicial. No se puede deshacer.",
+            confirmTitle: "Borrar todo"
+        ) {
+            dependencies.storeResetting.reset()
         }
     }
 }

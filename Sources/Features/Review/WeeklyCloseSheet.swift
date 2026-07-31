@@ -12,41 +12,30 @@ struct WeeklyCloseSheet: View {
     }
 
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(spacing: Layout.gap) {
-                    numbersCard
-                    breakdownCard
-                    paymentsCard
+        ModalScaffold(
+            title: "Cierre semanal",
+            primary: ModalAction("Cerrar la semana") {
+                model.complete()
+                dismiss()
+            },
+            spacing: Layout.gap
+        ) {
+            numbersCard
+            breakdownCard
+            paymentsCard
 
-                    if model.surplus > 0 {
-                        SurplusDestinationPicker(
-                            surplus: model.surplus,
-                            selection: $model.surplusDestination,
-                            money: dependencies.money,
-                            currency: model.currency
-                        )
-                    }
-
-                    InfoBanner(message: model.recommendation, severity: .info)
-
-                    Button("Cerrar la semana") {
-                        model.complete()
-                        dismiss()
-                    }
-                    .primaryButton()
-                }
-                .padding(Layout.gutter)
+            if model.surplus > 0 {
+                SurplusDestinationPicker(
+                    surplus: model.surplus,
+                    selection: $model.surplusDestination,
+                    money: dependencies.money,
+                    currency: model.currency
+                )
             }
-            .background(Palette.canvas)
-            .navigationTitle("Cierre semanal")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cerrar") { dismiss() }
-                }
-            }
+
+            InfoBanner(message: model.recommendation, severity: .info)
         }
+        .modalPresentation()
     }
 
     private var numbersCard: some View {
@@ -133,19 +122,13 @@ struct SurplusDestinationPicker: View {
                 SectionHeader(title: "Te sobraron \(money.string(surplus, currency: currency))")
 
                 ForEach(SurplusDestination.allCases) { destination in
-                    Button {
-                        selection = destination
-                    } label: {
-                        HStack(spacing: Layout.gap) {
-                            Image(systemName: selection == destination ? "largecircle.fill.circle" : "circle")
-                                .foregroundStyle(selection == destination ? Palette.accent : Palette.tertiaryText)
-                            Label(destination.label, systemImage: destination.icon)
-                                .font(Typography.body)
-                                .foregroundStyle(Palette.primaryText)
-                            Spacer()
-                        }
+                    OptionRow(
+                        title: destination.label,
+                        icon: destination.icon,
+                        isSelected: selection == destination
+                    ) {
+                        withAnimation(DesignSystem.Motion.swap) { selection = destination }
                     }
-                    .buttonStyle(.plain)
                 }
             }
         }

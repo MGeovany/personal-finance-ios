@@ -20,74 +20,65 @@ struct GoalEditorSheet: View {
     }
 
     var body: some View {
-        NavigationStack {
-            Form {
-                Section {
-                    Picker("Tipo", selection: templateBinding) {
-                        ForEach(GoalTemplate.allCases) { template in
-                            Label(template.label, systemImage: template.icon).tag(template)
-                        }
-                    }
-                    TextField("Nombre", text: $draft.name)
-                }
+        ModalScaffold(
+            title: draft.name.isEmpty ? "Nueva meta" : draft.name,
+            primary: ModalAction("Guardar", isEnabled: draft.isValid) {
+                onSave(draft)
+                dismiss()
+            }
+        ) {
+            CardSection {
+                SelectRow(
+                    title: "Tipo",
+                    selection: templateBinding,
+                    options: GoalTemplate.allCases,
+                    label: \.label,
+                    icon: { $0.icon }
+                )
+                RowDivider()
+                CeroTextField(title: "Nombre", text: $draft.name, placeholder: "Fondo de viaje")
+            }
 
-                Section {
-                    MoneyField(title: "Monto objetivo", amount: $draft.targetAmount, currency: draft.currency)
-                    MoneyField(title: "Ya tengo acumulado", amount: $draft.savedAmount, currency: draft.currency)
-                    MoneyField(title: "Aporte mensual deseado", amount: $draft.requestedMonthly, currency: draft.currency)
-                    Picker("Moneda", selection: $draft.currency) {
-                        ForEach(currencies) { currency in
-                            Text("\(currency.rawValue) · \(currency.symbol)").tag(currency)
-                        }
-                    }
-                }
+            CardSection {
+                MoneyField(title: "Monto objetivo", amount: $draft.targetAmount, currency: draft.currency)
+                MoneyField(title: "Ya tengo acumulado", amount: $draft.savedAmount, currency: draft.currency)
+                MoneyField(title: "Aporte mensual deseado", amount: $draft.requestedMonthly, currency: draft.currency)
+                RowDivider()
+                SelectRow(
+                    title: "Moneda",
+                    selection: $draft.currency,
+                    options: currencies,
+                    label: { $0.rawValue },
+                    detail: { $0.displayName }
+                )
+            }
 
-                Section {
-                    Toggle("Tiene fecha", isOn: $hasDeadline)
-                    if hasDeadline {
-                        DatePicker(
-                            "Fecha",
-                            selection: Binding(
-                                get: { draft.targetDate ?? Date() },
-                                set: { draft.targetDate = $0 }
-                            ),
-                            displayedComponents: .date
+            CardSection {
+                CeroToggle(title: "Tiene fecha", isOn: $hasDeadline)
+                if hasDeadline {
+                    RowDivider()
+                    DateRow(
+                        title: "Fecha",
+                        date: Binding(
+                            get: { draft.targetDate ?? Date() },
+                            set: { draft.targetDate = $0 }
                         )
-                    }
-                }
-                .onChange(of: hasDeadline) { _, enabled in
-                    draft.targetDate = enabled ? (draft.targetDate ?? Date()) : nil
-                }
-
-                Section {
-                    Picker("Ritmo", selection: $draft.mode) {
-                        ForEach(GoalMode.allCases) { mode in
-                            Text(mode.label).tag(mode)
-                        }
-                    }
-                    .pickerStyle(.inline)
-                    .labelsHidden()
-                } header: {
-                    Text("¿Cómo quieres financiarla?")
-                } footer: {
-                    Text(draft.mode.explanation)
+                    )
                 }
             }
-            .navigationTitle(draft.name.isEmpty ? "Nueva meta" : draft.name)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancelar") { dismiss() }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Guardar") {
-                        onSave(draft)
-                        dismiss()
+            .onChange(of: hasDeadline) { _, enabled in
+                draft.targetDate = enabled ? (draft.targetDate ?? Date()) : nil
+            }
+
+            CardSection(header: "¿Cómo quieres financiarla?", footer: draft.mode.explanation) {
+                ForEach(GoalMode.allCases) { mode in
+                    OptionRow(title: mode.label, isSelected: draft.mode == mode) {
+                        withAnimation(DesignSystem.Motion.swap) { draft.mode = mode }
                     }
-                    .disabled(!draft.isValid)
                 }
             }
         }
+        .modalPresentation()
     }
 
     /// Picking a template fills in the icon and, while the name is still untouched,

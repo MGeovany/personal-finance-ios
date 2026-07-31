@@ -22,6 +22,8 @@ struct SimulatorView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: Layout.gap) {
+                DetailHeader(title: "¿Qué pasa si...?")
+
                 scenarioPicker
                 inputs
 
@@ -41,8 +43,7 @@ struct SimulatorView: View {
             }
             .padding(Layout.gutter)
         }
-        .background(Palette.canvas)
-        .navigationTitle("¿Qué pasa si...?")
+        .screenSurface()
     }
 
     // MARK: - Scenario
@@ -54,26 +55,30 @@ struct SimulatorView: View {
 
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: Layout.tightGap) {
                     ForEach(SimulatorViewModel.Scenario.allCases) { scenario in
+                        let isSelected = model.scenario == scenario
+
                         Button {
-                            model.scenario = scenario
+                            withAnimation(DesignSystem.Motion.swap) { model.scenario = scenario }
                         } label: {
-                            VStack(spacing: 6) {
+                            VStack(spacing: DesignSystem.Space.s) {
                                 Image(systemName: scenario.icon)
-                                    .font(.system(size: 16))
+                                    .font(.system(size: 17, weight: .medium))
                                 Text(scenario.label)
                                     .font(Typography.caption)
                                     .multilineTextAlignment(.center)
                                     .fixedSize(horizontal: false, vertical: true)
                             }
-                            .foregroundStyle(model.scenario == scenario ? .white : Palette.secondaryText)
+                            .foregroundStyle(isSelected ? Palette.invertedText : Palette.secondaryText)
                             .frame(maxWidth: .infinity)
-                            .padding(.vertical, Layout.gap)
+                            .frame(minHeight: 84)
+                            .padding(DesignSystem.Space.s)
                             .background(
-                                model.scenario == scenario ? Palette.accent : Palette.surfaceMuted,
+                                isSelected ? Palette.accent : Palette.surfaceMuted,
                                 in: RoundedRectangle(cornerRadius: Layout.chipRadius, style: .continuous)
                             )
                         }
                         .buttonStyle(.plain)
+                        .accessibilityAddTraits(isSelected ? [.isSelected] : [])
                     }
                 }
             }
@@ -95,12 +100,12 @@ struct SimulatorView: View {
                     )
 
                 case .changeCategoryBudget:
-                    Picker("Categoría", selection: $model.selectedCategoryKey) {
-                        ForEach(model.availableCategories) { category in
-                            Text(category.name).tag(category.key)
-                        }
-                    }
-                    .pickerStyle(.navigationLink)
+                    SelectRow(
+                        title: "Categoría",
+                        selection: $model.selectedCategoryKey,
+                        options: model.availableCategories.map(\.key),
+                        label: { key in model.availableCategories.first { $0.key == key }?.name ?? key }
+                    )
                     MoneyField(title: "Nuevo presupuesto mensual", amount: $model.amount, currency: model.currency)
 
                 case .useSavings:
@@ -111,7 +116,7 @@ struct SimulatorView: View {
 
                 case .extraIncome:
                     MoneyField(title: "Ingreso extra", amount: $model.amount, currency: model.currency)
-                    Toggle("Es todos los meses", isOn: $model.isRecurringIncome)
+                    CeroToggle(title: "Es todos los meses", isOn: $model.isRecurringIncome)
 
                 case .extraPayment:
                     picker(
@@ -130,12 +135,12 @@ struct SimulatorView: View {
                         options: model.availableGoals.map { ($0.uuid, $0.name) },
                         selection: $model.selectedGoalID
                     )
-                    Picker("Ritmo", selection: $model.selectedMode) {
-                        ForEach(GoalMode.allCases) { mode in
-                            Text(mode.label).tag(mode)
-                        }
-                    }
-                    .pickerStyle(.segmented)
+                    SelectRow(
+                        title: "Ritmo",
+                        selection: $model.selectedMode,
+                        options: GoalMode.allCases,
+                        label: \.label
+                    )
 
                 case .cardPurchase:
                     picker(
@@ -144,37 +149,35 @@ struct SimulatorView: View {
                         selection: $model.selectedDebtID
                     )
                     MoneyField(title: "Monto de la compra", amount: $model.amount, currency: model.currency)
-                    Toggle("Ya tengo el dinero", isOn: $model.isCardPurchaseBacked)
+                    CeroToggle(title: "Ya tengo el dinero", isOn: $model.isCardPurchaseBacked)
 
                 case .changePlan:
-                    Picker("Plan", selection: $model.selectedSpeed) {
-                        ForEach(PlanSpeed.displayOrder) { speed in
-                            Text(dependencies.profile.name(for: speed)).tag(speed)
-                        }
-                    }
-                    .pickerStyle(.segmented)
+                    SegmentedSelector(
+                        selection: $model.selectedSpeed,
+                        options: PlanSpeed.displayOrder,
+                        label: { dependencies.profile.name(for: $0) }
+                    )
 
                 case .changeStrategy:
-                    Picker("Estrategia", selection: $model.selectedStrategy) {
-                        ForEach(PayoffStrategy.allCases) { strategy in
-                            Text(strategy.label).tag(strategy)
-                        }
-                    }
-                    .pickerStyle(.segmented)
+                    SegmentedSelector(
+                        selection: $model.selectedStrategy,
+                        options: PayoffStrategy.allCases,
+                        label: \.label
+                    )
                 }
             }
         }
     }
 
-    /// A picker over `(id, name)` pairs. Taking the pairs rather than the entities
+    /// A choice over `(id, name)` pairs. Taking the pairs rather than the entities
     /// keeps this free of any entity type and of SwiftData identifiers.
     private func picker(_ title: String, options: [(id: UUID, name: String)], selection: Binding<UUID?>) -> some View {
-        Picker(title, selection: selection) {
-            ForEach(options, id: \.id) { option in
-                Text(option.name).tag(Optional(option.id))
-            }
-        }
-        .pickerStyle(.navigationLink)
+        SelectRow(
+            title: title,
+            selection: selection,
+            options: options.map { Optional($0.id) },
+            label: { id in options.first { $0.id == id }?.name ?? "Elegir" }
+        )
     }
 
     // MARK: - Result

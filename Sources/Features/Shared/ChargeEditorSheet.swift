@@ -54,70 +54,45 @@ struct ChargeEditorSheet: View {
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        NavigationStack {
-            Form {
-                Section {
-                    TextField(purpose.namePlaceholder, text: $draft.name)
-                    MoneyField(title: purpose.amountLabel, amount: $draft.amount, currency: draft.currency)
-                }
-
-                Section {
-                    Picker("Frecuencia", selection: $draft.frequency) {
-                        ForEach(ChargeFrequency.allCases) { frequency in
-                            Text(frequency.label).tag(frequency)
-                        }
-                    }
-
-                    Picker("Moneda", selection: $draft.currency) {
-                        ForEach(currencies) { currency in
-                            Text("\(currency.rawValue) · \(currency.symbol)").tag(currency)
-                        }
-                    }
-
-                    DayOfMonthPicker(title: purpose.dayLabel, day: $draft.day)
-                }
-
-                if purpose == .subscription {
-                    Section {
-                        Toggle("La sigo usando", isOn: $draft.isNecessary)
-                    } footer: {
-                        Text("Si la marcas como no necesaria, la app te mostrará cuánto adelantarías tu fecha libre de deuda al cancelarla.")
-                    }
-                }
+        ModalScaffold(
+            title: purpose.title,
+            primary: ModalAction("Guardar", isEnabled: draft.isValid) {
+                onSave(draft)
+                dismiss()
             }
-            .navigationTitle(purpose.title)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancelar") { dismiss() }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Guardar") {
-                        onSave(draft)
-                        dismiss()
-                    }
-                    .disabled(!draft.isValid)
+        ) {
+            CardSection {
+                CeroTextField(title: "Nombre", text: $draft.name, placeholder: purpose.namePlaceholder)
+                MoneyField(title: purpose.amountLabel, amount: $draft.amount, currency: draft.currency)
+            }
+
+            CardSection {
+                SelectRow(
+                    title: "Frecuencia",
+                    selection: $draft.frequency,
+                    options: ChargeFrequency.allCases,
+                    label: \.label
+                )
+                RowDivider()
+                SelectRow(
+                    title: "Moneda",
+                    selection: $draft.currency,
+                    options: currencies,
+                    label: { $0.rawValue },
+                    detail: { $0.displayName }
+                )
+                RowDivider()
+                DayOfMonthPicker(title: purpose.dayLabel, day: $draft.day)
+            }
+
+            if purpose == .subscription {
+                CardSection(
+                    footer: "Si la marcas como no necesaria, la app te mostrará cuánto adelantarías tu fecha libre de deuda al cancelarla."
+                ) {
+                    CeroToggle(title: "La sigo usando", isOn: $draft.isNecessary)
                 }
             }
         }
-    }
-}
-
-/// Day-of-month selection that allows "not set", since not every charge has a
-/// fixed day.
-struct DayOfMonthPicker: View {
-    let title: String
-    @Binding var day: Int?
-
-    var body: some View {
-        Picker(title, selection: Binding(
-            get: { day ?? 0 },
-            set: { day = $0 == 0 ? nil : $0 }
-        )) {
-            Text("Sin definir").tag(0)
-            ForEach(1...31, id: \.self) { value in
-                Text("Día \(value)").tag(value)
-            }
-        }
+        .modalPresentation()
     }
 }

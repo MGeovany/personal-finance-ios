@@ -27,58 +27,50 @@ struct UtilitySettleSheet: View {
     }
 
     var body: some View {
-        NavigationStack {
-            Form {
-                Section {
-                    Toggle("Este mes lo pagó otra persona", isOn: $paidBySomeoneElse)
+        ModalScaffold(
+            title: utility.name,
+            subtitle: "Cierre del mes",
+            primary: ModalAction("Guardar") {
+                onSettle(paidBySomeoneElse ? nil : actual, paidBySomeoneElse, destination)
+                dismiss()
+            }
+        ) {
+            CardSection(
+                footer: "Reservaste \(money.string(utility.estimatedAmount, currency: utility.currency)) para \(utility.name.lowercased()) este mes."
+            ) {
+                CeroToggle(title: "Este mes lo pagó otra persona", isOn: $paidBySomeoneElse)
 
-                    if !paidBySomeoneElse {
-                        MoneyField(title: "Monto real", amount: $actual, currency: utility.currency)
-                    }
-                } footer: {
-                    Text("Reservaste \(money.string(utility.estimatedAmount, currency: utility.currency)) para \(utility.name.lowercased()) este mes.")
-                }
-
-                if surplus > 0 {
-                    Section {
-                        Picker("Destino", selection: $destination) {
-                            ForEach(SurplusDestination.allCases) { option in
-                                Label(option.label, systemImage: option.icon).tag(option)
-                            }
-                        }
-                        .pickerStyle(.inline)
-                        .labelsHidden()
-                    } header: {
-                        Text("Te sobran \(money.string(surplus, currency: utility.currency))")
-                    } footer: {
-                        Text(
-                            destination == recommendedDestination
-                                ? "Es lo que recomendamos mientras tengas deuda con intereses altos."
-                                : "Puedes elegir otro destino, pero abonar a la deuda es lo que más te ahorra."
-                        )
-                    }
-                } else if difference < 0 {
-                    Section {
-                        Text("La factura salió \(money.string(abs(difference), currency: utility.currency)) más alta de lo reservado. Sale del presupuesto de imprevistos.")
-                            .font(Typography.caption)
-                            .foregroundStyle(Palette.caution)
-                    }
+                if !paidBySomeoneElse {
+                    RowDivider()
+                    MoneyField(title: "Monto real", amount: $actual, currency: utility.currency)
                 }
             }
-            .navigationTitle(utility.name)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancelar") { dismiss() }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Guardar") {
-                        onSettle(paidBySomeoneElse ? nil : actual, paidBySomeoneElse, destination)
-                        dismiss()
+
+            if surplus > 0 {
+                CardSection(
+                    header: "Te sobran \(money.string(surplus, currency: utility.currency))",
+                    footer: destination == recommendedDestination
+                        ? "Es lo que recomendamos mientras tengas deuda con intereses altos."
+                        : "Puedes elegir otro destino, pero abonar a la deuda es lo que más te ahorra."
+                ) {
+                    ForEach(SurplusDestination.allCases) { option in
+                        OptionRow(
+                            title: option.label,
+                            icon: option.icon,
+                            isSelected: destination == option
+                        ) {
+                            withAnimation(DesignSystem.Motion.swap) { destination = option }
+                        }
                     }
                 }
+            } else if difference < 0 {
+                InfoBanner(
+                    message: "La factura salió \(money.string(abs(difference), currency: utility.currency)) más alta de lo reservado. Sale del presupuesto de imprevistos.",
+                    severity: .caution
+                )
             }
         }
+        .modalPresentation()
     }
 
     /// When someone else pays, the whole reserve is free.

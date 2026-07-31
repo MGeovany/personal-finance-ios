@@ -24,14 +24,14 @@ struct InfoBanner: View {
 
                 if let action {
                     Button(action.title, action: action.handler)
-                        .font(Typography.label)
-                        .foregroundStyle(tint)
+                        .compactButton(isProminent: severity == .critical)
+                        .padding(.top, DesignSystem.Space.xxs)
                 }
             }
         }
         .padding(Layout.cardPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(tint.opacity(0.10), in: RoundedRectangle(cornerRadius: Layout.cardRadius, style: .continuous))
+        .background(Palette.surface(for: tint), in: RoundedRectangle(cornerRadius: Layout.cardRadius, style: .continuous))
     }
 
     private var tint: Color { Palette.color(for: severity) }

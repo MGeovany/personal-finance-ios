@@ -23,6 +23,8 @@ struct TargetDateView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: Layout.gap) {
+                DetailHeader(title: "Fecha objetivo")
+
                 datePickerCard
                 threeDatesCard
 
@@ -32,8 +34,7 @@ struct TargetDateView: View {
             }
             .padding(Layout.gutter)
         }
-        .background(Palette.canvas)
-        .navigationTitle("Fecha objetivo")
+        .screenSurface()
         .onAppear(perform: evaluate)
         .onChange(of: targetDate) { _, _ in evaluate() }
     }
@@ -41,20 +42,18 @@ struct TargetDateView: View {
     private var datePickerCard: some View {
         CardContainer {
             VStack(alignment: .leading, spacing: Layout.gap) {
-                DatePicker(
-                    "Quiero estar libre de deudas el",
-                    selection: $targetDate,
-                    in: Date()...,
-                    displayedComponents: .date
+                DateRow(
+                    title: "Quiero estar libre de deudas el",
+                    date: $targetDate,
+                    range: Date()...
                 )
-                .datePickerStyle(.compact)
 
                 if dependencies.profile.targetDate != nil {
+                    RowDivider()
                     Button("Quitar mi fecha objetivo") {
                         dependencies.preferences.setTargetDate(nil)
                     }
-                    .font(Typography.caption)
-                    .foregroundStyle(Palette.secondaryText)
+                    .quietButton()
                 }
             }
         }

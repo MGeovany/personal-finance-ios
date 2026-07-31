@@ -22,44 +22,31 @@ struct DailyReviewSheet: View {
     }
 
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(spacing: Layout.gap) {
-                    summaryCard
-                    expensesCard
+        ModalScaffold(
+            title: "Revisión de hoy",
+            primary: ModalAction("Terminar revisión") {
+                model.complete()
+                dismiss()
+            },
+            secondary: ModalAction("Agregar gasto") { addingExpense = true },
+            spacing: Layout.gap
+        ) {
+            summaryCard
+            expensesCard
 
-                    if !model.uncategorized.isEmpty {
-                        uncategorizedCard
-                    }
-
-                    if !model.expectedCharges.isEmpty {
-                        expectedCard
-                    }
-
-                    checklistCard
-
-                    Button("Agregar gasto") { addingExpense = true }
-                        .secondaryButton()
-
-                    Button("Terminar revisión") {
-                        model.complete()
-                        dismiss()
-                    }
-                    .primaryButton()
-                }
-                .padding(Layout.gutter)
+            if !model.uncategorized.isEmpty {
+                uncategorizedCard
             }
-            .background(Palette.canvas)
-            .navigationTitle("Revisión de hoy")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cerrar") { dismiss() }
-                }
+
+            if !model.expectedCharges.isEmpty {
+                expectedCard
             }
-            .sheet(isPresented: $addingExpense) {
-                AddExpenseSheet(dependencies: dependencies)
-            }
+
+            checklistCard
+        }
+        .modalPresentation()
+        .sheet(isPresented: $addingExpense) {
+            AddExpenseSheet(dependencies: dependencies)
         }
     }
 
@@ -121,20 +108,16 @@ struct DailyReviewSheet: View {
                 SectionHeader(title: "Falta categorizar")
 
                 ForEach(model.uncategorized) { expense in
-                    HStack {
-                        Text(dependencies.money.string(expense.amount, currency: expense.currency))
-                            .font(Typography.amount)
-                        Spacer()
-                        Picker("", selection: Binding(
+                    SelectRow(
+                        title: dependencies.money.string(expense.amount, currency: expense.currency),
+                        selection: Binding(
                             get: { expense.categoryKey },
                             set: { model.categorize(expense, as: $0) }
-                        )) {
-                            ForEach(dependencies.categories.visible()) { category in
-                                Text(category.name).tag(category.key)
-                            }
-                        }
-                        .labelsHidden()
-                    }
+                        ),
+                        options: dependencies.categories.visible().map(\.key),
+                        label: { key in categoryName(for: key) },
+                        icon: { key in dependencies.categories.visible().first { $0.key == key }?.icon }
+                    )
                 }
             }
         }
@@ -160,16 +143,15 @@ struct DailyReviewSheet: View {
 
     private var checklistCard: some View {
         CardContainer {
-            Toggle(isOn: $model.hasCheckedExternalApps) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Ya revisé Wallet y mis apps bancarias")
-                        .font(Typography.label)
-                        .foregroundStyle(Palette.primaryText)
-                    Text("Para que no se te escape ningún cargo automático.")
-                        .font(Typography.caption)
-                        .foregroundStyle(Palette.tertiaryText)
-                }
-            }
+            CeroToggle(
+                title: "Ya revisé Wallet y mis apps bancarias",
+                caption: "Para que no se te escape ningún cargo automático.",
+                isOn: $model.hasCheckedExternalApps
+            )
         }
+    }
+
+    private func categoryName(for key: String) -> String {
+        dependencies.categories.visible().first { $0.key == key }?.name ?? key
     }
 }

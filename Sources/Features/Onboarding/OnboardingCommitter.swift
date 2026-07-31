@@ -57,12 +57,16 @@ struct OnboardingCommitter: OnboardingCommitting {
 
     private func writeProfile(_ draft: OnboardingDraft) {
         let profile = profiles.profile()
+        profile.displayName = draft.name.trimmingCharacters(in: .whitespacesAndNewlines)
         profile.currency = draft.currency
         profile.primaryIncome = draft.primaryIncome
         profile.emergencyFund = draft.emergencyFund
         profile.savings = draft.savings
         profile.groceryMode = draft.groceryMode
         profile.groceryMainShare = draft.groceryMode.defaultMainShare
+        profile.notificationsEnabled = draft.remindersEnabled
+        profile.reminderHour = draft.reminderHour
+        profile.reminderMinute = 0
         profiles.save()
     }
 

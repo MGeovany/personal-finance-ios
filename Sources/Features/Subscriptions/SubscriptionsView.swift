@@ -5,6 +5,7 @@ struct SubscriptionsView: View {
     let dependencies: AppDependencies
     @State private var model: SubscriptionsViewModel
     @State private var editing: ChargeDraft?
+    @State private var deleting: SubscriptionEntity?
 
     init(dependencies: AppDependencies) {
         self.dependencies = dependencies
@@ -20,6 +21,12 @@ struct SubscriptionsView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: Layout.gap) {
+                DetailHeader(title: "Suscripciones") {
+                    IconButton(systemImage: "plus", label: "Agregar suscripción", isProminent: true) {
+                        editing = ChargeDraft(currency: model.currency)
+                    }
+                }
+
                 summaryCard
 
                 if !model.unused.isEmpty {
@@ -52,8 +59,7 @@ struct SubscriptionsView: View {
             }
             .padding(Layout.gutter)
         }
-        .background(Palette.canvas)
-        .navigationTitle("Suscripciones")
+        .screenSurface()
         .sheet(item: $editing) { draft in
             ChargeEditorSheet(purpose: .subscription, draft: draft, currencies: CurrencyCode.allCases) { saved in
                 if model.allSubscriptions.contains(where: { $0.uuid == saved.id }) {
@@ -62,6 +68,14 @@ struct SubscriptionsView: View {
                     model.add(saved)
                 }
             }
+        }
+        .confirmationDrawer(
+            item: $deleting,
+            title: { "¿Eliminar \($0.name)?" },
+            message: { _ in "Sale de tus gastos recurrentes y de los cálculos del plan." },
+            confirmTitle: "Eliminar"
+        ) { subscription in
+            model.delete(subscription)
         }
     }
 
@@ -132,7 +146,7 @@ struct SubscriptionsView: View {
         .contextMenu {
             Button("Editar") { editing = ChargeDraft(subscription) }
             Button("Marcar que la usé hoy") { model.markUsedNow(subscription) }
-            Button("Eliminar", role: .destructive) { model.delete(subscription) }
+            Button("Eliminar", role: .destructive) { deleting = subscription }
         }
     }
 

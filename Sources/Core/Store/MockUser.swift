@@ -66,6 +66,9 @@ struct MockUser {
 
     private func seedProfile() {
         let profile = profiles.profile()
+        // The fixture stands in for somebody who finished setup, and setup asks for
+        // a name, so the screens that greet the user have something to greet.
+        profile.displayName = "Ana"
         profile.currency = .hnl
         profile.primaryIncome = 45_000
         profile.emergencyFund = 8_000

@@ -10,6 +10,8 @@ struct FixedExpensesView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: Layout.gap) {
+                DetailHeader(title: "Gastos fijos")
+
                 if !items.isEmpty {
                     CardContainer {
                         DetailRow(
@@ -48,8 +50,7 @@ struct FixedExpensesView: View {
             }
             .padding(Layout.gutter)
         }
-        .background(Palette.canvas)
-        .navigationTitle("Gastos fijos")
+        .screenSurface()
         .sheet(item: $editing) { draft in
             ChargeEditorSheet(purpose: .fixedExpense, draft: draft, currencies: CurrencyCode.allCases) { saved in
                 upsert(saved)
@@ -100,6 +101,8 @@ struct IncomeListView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: Layout.gap) {
+                DetailHeader(title: "Otros ingresos")
+
                 ForEach(items) { item in
                     ChargeSummaryRow(
                         charge: draft(from: item),
@@ -131,8 +134,7 @@ struct IncomeListView: View {
             }
             .padding(Layout.gutter)
         }
-        .background(Palette.canvas)
-        .navigationTitle("Otros ingresos")
+        .screenSurface()
         .sheet(item: $editing) { draft in
             ChargeEditorSheet(purpose: .income, draft: draft, currencies: CurrencyCode.allCases) { saved in
                 upsert(saved)

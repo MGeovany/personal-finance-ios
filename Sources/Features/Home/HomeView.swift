@@ -23,6 +23,12 @@ struct HomeView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: Layout.gap) {
+                ScreenHeader(title: "Hoy", subtitle: greeting) {
+                    IconButton(systemImage: "checklist", label: "Revisión de hoy") {
+                        route = .dailyReview
+                    }
+                }
+
                 HomeHeaderCard(
                     totalDebt: model.totalDebt,
                     debtChange: model.debtChangeThisMonth,
@@ -68,8 +74,7 @@ struct HomeView: View {
             .padding(.horizontal, Layout.gutter)
             .padding(.bottom, Layout.sectionGap * 3)
         }
-        .background(Palette.canvas)
-        .navigationTitle("Hoy")
+        .screenSurface()
         .safeAreaInset(edge: .bottom) { actionBar }
         .sheet(item: $route) { destination in
             sheet(for: destination)
@@ -86,6 +91,12 @@ struct HomeView: View {
             icon: "checklist",
             action: (title: "Revisar ahora", handler: { route = .dailyReview })
         )
+    }
+
+    /// Uses the name from setup when there is one. Absent, the header simply says
+    /// "Hoy", which is what it said before anybody was asked.
+    private var greeting: String? {
+        dependencies.profile.greetingName.map { "Hola, \($0)" }
     }
 
     @ViewBuilder
@@ -179,19 +190,26 @@ struct HomeView: View {
             }
             .primaryButton()
 
-            Button {
+            IconButton(
+                systemImage: "arrow.down",
+                label: "Registrar pago",
+                size: Layout.controlHeight
+            ) {
                 route = .registerPayment
-            } label: {
-                Label("Registrar pago", systemImage: "arrow.down")
-                    .labelStyle(.iconOnly)
-                    .frame(width: Layout.controlHeight)
             }
-            .secondaryButton()
-            .frame(width: Layout.controlHeight)
         }
         .padding(.horizontal, Layout.gutter)
         .padding(.vertical, Layout.gap)
-        .background(.bar)
+        .background {
+            // A soft fade rather than a bar, so the buttons read as floating over
+            // the page the way the rest of the surfaces do.
+            LinearGradient(
+                colors: [Palette.canvas.opacity(0), Palette.canvas, Palette.canvas],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .ignoresSafeArea()
+        }
     }
 
     @ViewBuilder
@@ -205,6 +223,7 @@ struct HomeView: View {
             NavigationStack {
                 PlanComparisonView(dependencies: dependencies)
             }
+            .modalPresentation()
         case .dailyReview:
             DailyReviewSheet(dependencies: dependencies)
         case .monthlyClose:

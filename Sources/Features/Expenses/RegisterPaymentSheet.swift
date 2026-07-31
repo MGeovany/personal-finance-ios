@@ -17,64 +17,43 @@ struct RegisterPaymentSheet: View {
     }
 
     var body: some View {
-        NavigationStack {
-            form
-                .navigationTitle("Registrar pago")
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .cancellationAction) {
-                        Button("Cancelar") { dismiss() }
-                    }
-                    ToolbarItem(placement: .confirmationAction) {
-                        Button("Guardar") {
-                            model.save()
-                            if model.clearedDebt == nil { dismiss() }
-                        }
-                        .disabled(!model.canSave)
-                    }
-                }
-                .overlay {
-                    if let cleared = model.clearedDebt {
-                        celebration(for: cleared)
-                    }
-                }
-        }
-    }
-
-    private var form: some View {
-        Form {
-            Section {
+        ModalScaffold(
+            title: "Registrar pago",
+            primary: ModalAction("Guardar", isEnabled: model.canSave) {
+                model.save()
+                if model.clearedDebt == nil { dismiss() }
+            }
+        ) {
+            CardSection(footer: balanceCaption) {
                 if model.payableDebts.isEmpty {
                     Text("No tienes deudas pendientes.")
                         .font(Typography.body)
                         .foregroundStyle(Palette.secondaryText)
                 } else {
-                    Picker("Deuda", selection: $model.selectedDebtID) {
-                        ForEach(model.payableDebts) { debt in
-                            Text(debt.name).tag(Optional(debt.uuid))
-                        }
-                    }
-                    .pickerStyle(.navigationLink)
+                    SelectRow(
+                        title: "Deuda",
+                        selection: $model.selectedDebtID,
+                        options: model.payableDebts.map { Optional($0.uuid) },
+                        label: { id in model.payableDebts.first { $0.uuid == id }?.name ?? "Elegir" }
+                    )
+                    RowDivider()
                 }
 
                 MoneyField(title: "Monto", amount: $model.amount, currency: model.currency)
-                DatePicker("Fecha", selection: $model.date, displayedComponents: .date)
-            } footer: {
-                if let debt = model.selectedDebt {
-                    Text("Saldo actual: \(dependencies.money.string(debt.balance, currency: debt.currency)) · Mínimo: \(dependencies.money.string(debt.minimumPayment, currency: debt.currency))")
-                }
+                RowDivider()
+                DateRow(title: "Fecha", date: $model.date)
             }
 
             if model.isRecommendedAmount {
-                Section {
-                    Label("Es el pago que recomienda tu plan", systemImage: "checkmark.seal")
-                        .font(Typography.caption)
-                        .foregroundStyle(Palette.accent)
-                }
+                InfoBanner(
+                    message: "Es el pago que recomienda tu plan.",
+                    severity: .info,
+                    icon: "checkmark.seal"
+                )
             }
 
             if let impact = model.projectedImpact, impact.movesDate {
-                Section {
+                CardSection(header: "Con este pago") {
                     ImpactBadge(
                         impact: impact,
                         dates: dependencies.dates,
@@ -82,15 +61,26 @@ struct RegisterPaymentSheet: View {
                         currency: model.currency,
                         money: dependencies.money
                     )
-                } header: {
-                    Text("Con este pago")
                 }
             }
 
-            Section {
-                TextField("Nota (opcional)", text: $model.note)
+            CardSection {
+                CeroTextField(title: "Nota", text: $model.note, placeholder: "Opcional")
             }
         }
+        .modalPresentation()
+        .overlay {
+            if let cleared = model.clearedDebt {
+                celebration(for: cleared)
+            }
+        }
+    }
+
+    private var balanceCaption: String? {
+        guard let debt = model.selectedDebt else { return nil }
+        let balance = dependencies.money.string(debt.balance, currency: debt.currency)
+        let minimum = dependencies.money.string(debt.minimumPayment, currency: debt.currency)
+        return "Saldo actual: \(balance) · Mínimo: \(minimum)"
     }
 
     /// The debt hit zero: acknowledge it, then ask what the account should become.

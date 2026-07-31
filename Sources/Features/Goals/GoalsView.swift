@@ -6,6 +6,7 @@ struct GoalsView: View {
     @State private var model: GoalsViewModel
     @State private var editing: GoalDraft?
     @State private var contributingTo: GoalEntity?
+    @State private var deleting: GoalEntity?
 
     init(dependencies: AppDependencies) {
         self.dependencies = dependencies
@@ -17,6 +18,12 @@ struct GoalsView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: Layout.gap) {
+                ScreenHeader(title: "Metas") {
+                    IconButton(systemImage: "plus", label: "Agregar meta", isProminent: true) {
+                        editing = GoalDraft(currency: model.currency)
+                    }
+                }
+
                 if model.hasDebt, model.totalMonthlyFunding > 0 {
                     InfoBanner(
                         message: "Estás aportando \(dependencies.money.string(model.totalMonthlyFunding, currency: model.currency)) al mes a tus metas mientras pagas deuda. Cada meta muestra cuántos días te cuesta.",
@@ -37,7 +44,7 @@ struct GoalsView: View {
                         onContribute: { contributingTo = goal }
                     )
                     .contextMenu {
-                        Button("Eliminar", role: .destructive) { model.delete(goal) }
+                        Button("Eliminar", role: .destructive) { deleting = goal }
                     }
                 }
 
@@ -60,8 +67,7 @@ struct GoalsView: View {
             }
             .padding(Layout.gutter)
         }
-        .background(Palette.canvas)
-        .navigationTitle("Metas")
+        .screenSurface()
         .sheet(item: $editing) { draft in
             GoalEditorSheet(draft: draft, currencies: CurrencyCode.allCases) { saved in
                 if dependencies.goals.goal(withID: saved.id) == nil {
@@ -71,46 +77,49 @@ struct GoalsView: View {
                 }
             }
         }
-        .sheet(item: $contributingTo) { goal in
+        .drawer(item: $contributingTo) { goal in
             GoalContributionSheet(goal: goal, currency: model.currency) { amount in
                 model.contribute(amount, to: goal)
             }
         }
+        .confirmationDrawer(
+            item: $deleting,
+            title: { "¿Eliminar \($0.name)?" },
+            message: { _ in "Se borra la meta y lo que le has abonado deja de contarse." },
+            confirmTitle: "Eliminar"
+        ) { goal in
+            model.delete(goal)
+        }
     }
 }
 
-/// Moves money into a goal.
+/// Moves money into a goal. One field, so it arrives as a drawer rather than a
+/// full modal.
 struct GoalContributionSheet: View {
     let goal: GoalEntity
     let currency: CurrencyCode
     let onContribute: (Money) -> Void
 
     @State private var amount: Money = 0
+    @Environment(\.moneyFormatter) private var money
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        NavigationStack {
-            Form {
-                Section {
-                    MoneyField(title: "Monto a abonar", amount: $amount, currency: goal.currency)
-                } footer: {
-                    Text("Le falta \(MoneyFormatter().string(goal.remaining, currency: goal.currency)) para completarse.")
-                }
+        Drawer(
+            title: goal.name,
+            message: "Le falta \(money.string(goal.remaining, currency: goal.currency)) para completarse.",
+            cancelTitle: "Cancelar"
+        ) {
+            CardContainer {
+                MoneyField(title: "Monto a abonar", amount: $amount, currency: goal.currency)
             }
-            .navigationTitle(goal.name)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancelar") { dismiss() }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Abonar") {
-                        onContribute(amount)
-                        dismiss()
-                    }
-                    .disabled(amount <= 0)
-                }
+
+            Button("Abonar") {
+                onContribute(amount)
+                dismiss()
             }
+            .disabled(amount <= 0)
+            .primaryButton(isEnabled: amount > 0)
         }
     }
 }

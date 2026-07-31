@@ -32,7 +32,7 @@ struct StrategyOptionRow: View {
 
                     if !isSelected, interestDifference != 0 {
                         Text(differenceLine)
-                            .font(Typography.caption.weight(.medium))
+                            .font(Typography.captionStrong)
                             .foregroundStyle(interestDifference > 0 ? Palette.positive : Palette.caution)
                     }
                 }

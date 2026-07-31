@@ -6,6 +6,9 @@ import SwiftData
 /// There is exactly one of these; `ProfileRepository` owns that invariant.
 @Model
 final class ProfileEntity {
+    /// What the app calls the user. Empty is allowed: the greeting simply drops
+    /// the name rather than blocking setup on it.
+    var displayName: String = ""
     var currencyRaw: String
     var primaryIncome: Money
     var emergencyFund: Money
@@ -26,6 +29,7 @@ final class ProfileEntity {
     var createdAt: Date
 
     init(
+        displayName: String = "",
         currency: CurrencyCode = .hnl,
         primaryIncome: Money = 0,
         emergencyFund: Money = 0,
@@ -41,6 +45,7 @@ final class ProfileEntity {
         hasCompletedOnboarding: Bool = false,
         createdAt: Date = Date()
     ) {
+        self.displayName = displayName
         self.currencyRaw = currency.rawValue
         self.primaryIncome = primaryIncome
         self.emergencyFund = emergencyFund
@@ -96,6 +101,12 @@ extension ProfileEntity {
 
     func name(for speed: PlanSpeed) -> String {
         planNamesRaw[speed.rawValue] ?? speed.defaultName
+    }
+
+    /// The name to greet with, or nothing when setup was walked without one.
+    var greetingName: String? {
+        let trimmed = displayName.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
     }
 
     func rename(_ speed: PlanSpeed, to name: String) {

@@ -20,57 +20,49 @@ struct CategoryBudgetSheet: View {
     }
 
     var body: some View {
-        NavigationStack {
-            Form {
-                Section {
-                    MoneyField(title: "Presupuesto mensual", amount: $amount, currency: model.currency)
-                } footer: {
-                    Text("Ahora tienes \(format(consumption.budget)) y has gastado \(format(consumption.spent)).")
+        ModalScaffold(
+            title: consumption.categoryName,
+            primary: ModalAction("Guardar", isEnabled: amount != consumption.budget) {
+                model.setBudget(amount, forKey: consumption.categoryKey)
+                dismiss()
+            },
+            secondary: isPinned
+                ? ModalAction("Dejar que el plan lo calcule") {
+                    model.clearOverride(forKey: consumption.categoryKey)
+                    dismiss()
                 }
+                : nil
+        ) {
+            CardSection(
+                footer: "Ahora tienes \(format(consumption.budget)) y has gastado \(format(consumption.spent))."
+            ) {
+                MoneyField(title: "Presupuesto mensual", amount: $amount, currency: model.currency)
+            }
 
-                if amount != consumption.budget {
-                    Section {
-                        ImpactBadge(
-                            impact: model.impact(ofSetting: amount, forKey: consumption.categoryKey),
-                            dates: dependencies.dates,
-                            showsInterest: true,
-                            currency: model.currency,
-                            money: dependencies.money
-                        )
-                        Text(dependencies.narrator.datedImpact(model.impact(ofSetting: amount, forKey: consumption.categoryKey)))
-                            .font(Typography.caption)
-                            .foregroundStyle(Palette.secondaryText)
-                    } header: {
-                        Text("Consecuencia")
-                    }
-                }
-
-                if isPinned {
-                    Section {
-                        Button("Dejar que el plan lo calcule") {
-                            model.clearOverride(forKey: consumption.categoryKey)
-                            dismiss()
-                        }
-                    } footer: {
-                        Text("Fijaste este presupuesto a mano, así que los planes ya no lo ajustan por velocidad.")
-                    }
+            if amount != consumption.budget {
+                CardSection(header: "Consecuencia") {
+                    ImpactBadge(
+                        impact: model.impact(ofSetting: amount, forKey: consumption.categoryKey),
+                        dates: dependencies.dates,
+                        showsInterest: true,
+                        currency: model.currency,
+                        money: dependencies.money
+                    )
+                    Text(dependencies.narrator.datedImpact(model.impact(ofSetting: amount, forKey: consumption.categoryKey)))
+                        .font(Typography.caption)
+                        .foregroundStyle(Palette.secondaryText)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
-            .navigationTitle(consumption.categoryName)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancelar") { dismiss() }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Guardar") {
-                        model.setBudget(amount, forKey: consumption.categoryKey)
-                        dismiss()
-                    }
-                    .disabled(amount == consumption.budget)
-                }
+
+            if isPinned {
+                Text("Fijaste este presupuesto a mano, así que los planes ya no lo ajustan por velocidad.")
+                    .font(Typography.caption)
+                    .foregroundStyle(Palette.tertiaryText)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         }
+        .modalPresentation()
     }
 
     private var isPinned: Bool {

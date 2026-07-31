@@ -18,6 +18,8 @@ struct PlanComparisonView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Layout.sectionGap) {
+                header
+
                 cards
 
                 Button {
@@ -43,9 +45,17 @@ struct PlanComparisonView: View {
             }
             .padding(Layout.gutter)
         }
-        .background(Palette.canvas)
-        .navigationTitle(isInitialChoice ? "Elige tu ritmo" : "Comparar planes")
-        .navigationBarTitleDisplayMode(.large)
+        .screenSurface()
+    }
+
+    /// The initial choice has nowhere to go back to, so it drops the back button.
+    @ViewBuilder
+    private var header: some View {
+        if isInitialChoice {
+            ScreenHeader(title: "Elige tu ritmo", subtitle: "Puedes cambiarlo cuando quieras.")
+        } else {
+            DetailHeader(title: "Comparar planes")
+        }
     }
 
     // MARK: - Cards
@@ -92,7 +102,7 @@ struct PlanComparisonView: View {
                 .frame(width: 108, alignment: .leading)
             ForEach(planStore.planSet.ordered) { plan in
                 Text(plan.name)
-                    .font(Typography.caption.weight(.semibold))
+                    .font(Typography.captionStrong)
                     .foregroundStyle(plan.speed == planStore.request.speed ? Palette.accent : Palette.secondaryText)
                     .frame(maxWidth: .infinity, alignment: .trailing)
                     .lineLimit(1)
@@ -112,7 +122,7 @@ struct PlanComparisonView: View {
 
             ForEach(planStore.planSet.ordered) { plan in
                 Text(row.value(plan))
-                    .font(row.isHighlighted ? Typography.caption.weight(.semibold) : Typography.caption)
+                    .font(row.isHighlighted ? Typography.captionStrong : Typography.caption)
                     .foregroundStyle(row.isHighlighted ? Palette.primaryText : Palette.secondaryText)
                     .frame(maxWidth: .infinity, alignment: .trailing)
                     .multilineTextAlignment(.trailing)
