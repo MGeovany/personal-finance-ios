@@ -51,30 +51,29 @@ enum DesignSystem {
         static let dangerSurface = Color(red: 0.984, green: 0.918, blue: 0.910)
     }
 
-    /// Inter from Google Fonts / rsms: neutral, tight, and built with tabular
-    /// figures, which is what a screen full of aligned amounts needs.
+    /// The weights the app draws with, taken from whichever typeface is active.
     ///
-    /// Names are the PostScript names inside each TTF. If one is wrong the system
-    /// silently substitutes San Francisco, which is why registration is checked at
-    /// launch.
+    /// Which family that is lives in `Typeface`, so a view never names a font and
+    /// swapping the whole app's type is one line there. If a face name is wrong the
+    /// system silently substitutes San Francisco, which is why registration is
+    /// checked at launch.
     ///
-    /// `Display` is the same design optically corrected for large sizes; it is used
-    /// only for headline numbers and titles.
+    /// Neither family ships a separate optical cut for large sizes, so the display
+    /// faces are the same drawings at a heavier weight. They stay named apart because
+    /// that is what the call sites mean, and because a real display cut would slot in
+    /// here without touching a single view.
     enum Face {
-        static let light = "Inter-Light"
-        static let regular = "Inter-Regular"
-        static let medium = "Inter-Medium"
-        static let semibold = "Inter-SemiBold"
-        static let bold = "Inter-Bold"
-        static let displayRegular = "InterDisplay-Regular"
-        static let displaySemibold = "InterDisplay-SemiBold"
-        static let displayBold = "InterDisplay-Bold"
+        static let light = Typeface.active.faces.light
+        static let regular = Typeface.active.faces.regular
+        static let medium = Typeface.active.faces.medium
+        static let semibold = Typeface.active.faces.semibold
+        static let bold = Typeface.active.faces.bold
+        static let displayRegular = regular
+        static let displaySemibold = semibold
+        static let displayBold = bold
 
-        /// Every face the app ships, in the order they are registered.
-        static let all: [String] = [
-            light, regular, medium, semibold, bold,
-            displayRegular, displaySemibold, displayBold,
-        ]
+        /// The distinct faces the app asks for, used to verify they all loaded.
+        static let all: [String] = Typeface.active.faces.all
     }
 
     /// Corner radii. Everything in the liquid-glass reference is soft: pills for
@@ -197,14 +196,18 @@ enum Palette {
         }
     }
 
+    /// Low plans read calm (cyan), the middle reads on-track (green), aggressive
+    /// plans read hot (red).
     static func color(for difficulty: PlanDifficulty) -> Color {
         switch difficulty {
-        case .comfortable: positive
-        case .moderate: secondaryText
-        case .demanding: primaryText
-        case .veryDemanding: critical
+        case .comfortable: cyan
+        case .moderate: positive
+        case .demanding, .veryDemanding: critical
         }
     }
+
+    /// Soft cyan for the easiest plan signal.
+    static let cyan = Color(red: 0.05, green: 0.72, blue: 0.82)
 
     /// The faint fill behind a tinted chip or banner. Feedback hues get their own
     /// tuned surface; ink is simply thinned.

@@ -72,7 +72,7 @@ struct OnboardingSavingsStep: View {
     /// ammunition against expensive debt.
     private var split: some View {
         CardContainer {
-            VStack(alignment: .leading, spacing: Layout.gap) {
+            VStack(alignment: .leading, spacing: DesignSystem.Space.l) {
                 DetailRow(
                     label: "Fondo de emergencia",
                     value: money.string(model.draft.emergencyFund, currency: model.draft.currency)

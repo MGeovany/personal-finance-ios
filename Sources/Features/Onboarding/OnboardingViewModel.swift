@@ -367,6 +367,37 @@ final class OnboardingViewModel {
         draft.goals[index].targetAmount = amount
     }
 
+    /// Nil clears the date, for a goal the user has in mind without a day attached.
+    func setTargetDate(_ date: Date?, for goal: GoalDraft) {
+        guard let index = draft.goals.firstIndex(where: { $0.id == goal.id }) else { return }
+        draft.goals[index].targetDate = date
+    }
+
+    // MARK: Payday
+
+    /// Picking a frequency fills in a sensible day for it, so the question is answered
+    /// by one tap and the day below is a correction rather than a second question.
+    func selectPaydayFrequency(_ frequency: PaydayFrequency) {
+        guard draft.paydaySchedule?.frequency != frequency else { return }
+        draft.paydaySchedule = .default(for: frequency, anchor: Date())
+    }
+
+    func setPaydayPrimaryDay(_ day: Int) {
+        draft.paydaySchedule?.primaryDay = day
+    }
+
+    func setPaydaySecondaryDay(_ day: Int) {
+        draft.paydaySchedule?.secondaryDay = day
+    }
+
+    func setPaydayAnchor(_ date: Date) {
+        draft.paydaySchedule?.anchor = date
+    }
+
+    func clearPayday() {
+        draft.paydaySchedule = nil
+    }
+
     func declareNoGoals() {
         draft.goals.removeAll()
         draft.hasNoGoals = true
@@ -387,6 +418,7 @@ final class OnboardingViewModel {
         case .debtKinds: draft.debts.isEmpty && !draft.wantsCreditCards && !draft.hasNoDebts
         case .savings: draft.emergencyFund == 0 && draft.savings == 0
         case .goals: draft.goals.isEmpty && !draft.hasNoGoals
+        case .payday: draft.paydaySchedule == nil
         default: false
         }
     }

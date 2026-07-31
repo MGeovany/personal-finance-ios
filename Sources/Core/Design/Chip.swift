@@ -11,12 +11,15 @@ struct Chip: View {
             if let icon {
                 Image(systemName: icon).font(.system(size: 10, weight: .semibold))
             }
-            Text(text).font(Typography.captionStrong)
+            Text(text)
+                .font(Typography.captionStrong)
+                .lineLimit(1)
         }
         .foregroundStyle(tint)
         .padding(.horizontal, DesignSystem.Space.s)
         .padding(.vertical, DesignSystem.Space.xxs)
         .background(Palette.surface(for: tint), in: Capsule())
+        .fixedSize(horizontal: true, vertical: false)
     }
 }
 
@@ -68,18 +71,28 @@ private struct SelectableChipSurface: ViewModifier {
     }
 }
 
-/// Difficulty as four dots, so plans can be compared without reading.
-struct DifficultyDots: View {
+/// Difficulty as rising bars, so plans can be compared without reading.
+///
+/// Bars rather than equal dots: dots said "one of four" and left the reader counting,
+/// while a climbing shape says "a little" or "a lot" at a glance, the way signal
+/// strength does.
+struct DifficultyBars: View {
     let difficulty: PlanDifficulty
 
+    private let shortest: CGFloat = 6
+    private let step: CGFloat = 3
+    private let width: CGFloat = 3.5
+
     var body: some View {
-        HStack(spacing: 3) {
-            ForEach(1...4, id: \.self) { index in
-                Circle()
-                    .fill(index <= difficulty.dots ? Palette.color(for: difficulty) : Palette.surfaceSunken)
-                    .frame(width: 6, height: 6)
+        HStack(alignment: .bottom, spacing: 3) {
+            ForEach(0..<PlanDifficulty.steps, id: \.self) { index in
+                RoundedRectangle(cornerRadius: 1.5, style: .continuous)
+                    .fill(index < difficulty.filledSteps ? Palette.color(for: difficulty) : Palette.surfaceSunken)
+                    .frame(width: width, height: shortest + step * CGFloat(index))
             }
         }
+        .animation(DesignSystem.Motion.swap, value: difficulty)
+        .accessibilityElement()
         .accessibilityLabel("Dificultad: \(difficulty.label)")
     }
 }

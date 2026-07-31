@@ -25,11 +25,13 @@ struct StatTile: View {
             Text(label)
                 .font(Typography.label)
                 .foregroundStyle(Palette.secondaryText)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
 
             Text(value)
                 .font(size.font)
                 .foregroundStyle(tint)
-                .minimumScaleFactor(0.6)
+                .minimumScaleFactor(0.55)
                 .lineLimit(1)
 
             if let caption {

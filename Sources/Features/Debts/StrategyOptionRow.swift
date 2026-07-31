@@ -15,15 +15,17 @@ struct StrategyOptionRow: View {
 
     var body: some View {
         Button(action: onSelect) {
-            HStack(alignment: .top, spacing: Layout.gap) {
+            HStack(alignment: .top, spacing: DesignSystem.Space.l) {
                 Image(systemName: isSelected ? "largecircle.fill.circle" : "circle")
                     .font(.system(size: 18))
                     .foregroundStyle(isSelected ? Palette.accent : Palette.tertiaryText)
 
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: DesignSystem.Space.xs) {
                     Text(strategy.label)
                         .font(Typography.label)
                         .foregroundStyle(Palette.primaryText)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
 
                     Text(strategy.explanation)
                         .font(Typography.caption)
@@ -34,12 +36,14 @@ struct StrategyOptionRow: View {
                         Text(differenceLine)
                             .font(Typography.captionStrong)
                             .foregroundStyle(interestDifference > 0 ? Palette.positive : Palette.caution)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.75)
                     }
                 }
 
                 Spacer(minLength: 0)
             }
-            .padding(.vertical, Layout.tightGap)
+            .padding(.vertical, DesignSystem.Space.s)
         }
         .buttonStyle(.plain)
     }

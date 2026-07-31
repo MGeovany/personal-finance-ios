@@ -22,6 +22,7 @@ struct CeroApp: App {
                 .environment(\.exchangeRates, dependencies.exchangeRates)
                 .environment(\.planDates, dependencies.dates)
                 .environment(\.planCurrency, dependencies.currency)
+                .refreshingExchangeRates(with: dependencies.exchangeRates)
                 .tint(Palette.accent)
                 .background(Palette.canvas)
         }

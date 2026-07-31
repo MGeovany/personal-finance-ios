@@ -94,21 +94,26 @@ private struct SelectOrAddDrawer: View {
 
     @ViewBuilder
     private var list: some View {
-        ForEach(listedOptions, id: \.self) { option in
-            OptionRow(
-                title: option,
-                isSelected: option.caseInsensitiveCompare(value) == .orderedSame,
-                isElevated: true
-            ) {
-                value = option
-                dismiss()
-            }
-        }
+        CardContainer(padding: DesignSystem.Space.xs) {
+            VStack(spacing: 0) {
+                ForEach(Array(listedOptions.enumerated()), id: \.element) { index, option in
+                    if index > 0 { RowDivider() }
+                    OptionRow(
+                        title: option,
+                        isSelected: option.caseInsensitiveCompare(value) == .orderedSame
+                    ) {
+                        value = option
+                        dismiss()
+                    }
+                }
 
-        // Last, because it is the answer for when none of the others fit.
-        OptionRow(title: addTitle, icon: "plus", isElevated: true) {
-            typed = isCustomValue ? value : ""
-            isAdding = true
+                // Last, because it is the answer for when none of the others fit.
+                if !listedOptions.isEmpty { RowDivider() }
+                OptionRow(title: addTitle, icon: "plus") {
+                    typed = isCustomValue ? value : ""
+                    isAdding = true
+                }
+            }
         }
     }
 

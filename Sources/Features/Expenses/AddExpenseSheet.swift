@@ -46,7 +46,6 @@ struct AddExpenseSheet: View {
         ) {
             CardSection {
                 MoneyField(title: "Monto", amount: $model.draft.amount, currency: model.draft.currency)
-                CeroTextField(title: "Comercio", text: $model.draft.merchant, placeholder: "Supermercado")
                 RowDivider()
                 DateRow(title: "Fecha", date: $model.draft.date)
             }
@@ -76,13 +75,11 @@ struct AddExpenseSheet: View {
                 }
             }
 
-            if model.draft.needsBackingQuestion, model.draft.debtID != nil {
-                backingSection
-            }
-
             CardSection {
-                CeroToggle(title: "Es un gasto recurrente", isOn: $model.draft.isRecurring)
-                RowDivider()
+                if CategoryKeys.allowsRecurringExpense(model.draft.categoryKey) {
+                    CeroToggle(title: "Es un gasto recurrente", isOn: $model.draft.isRecurring)
+                    RowDivider()
+                }
                 CeroTextField(title: "Nota", text: $model.draft.note, placeholder: "Opcional")
             }
 
@@ -96,6 +93,11 @@ struct AddExpenseSheet: View {
                         money: dependencies.money
                     )
                 }
+            }
+        }
+        .onChange(of: model.draft.categoryKey) { _, key in
+            if !CategoryKeys.allowsRecurringExpense(key) {
+                model.draft.isRecurring = false
             }
         }
     }
@@ -115,22 +117,6 @@ struct AddExpenseSheet: View {
                 ),
                 options: model.availableCards.map { Optional($0.uuid) },
                 label: { id in model.availableCards.first { $0.uuid == id }?.name ?? "Elegir" }
-            )
-        }
-    }
-
-    /// The question that keeps credit from being mistaken for money.
-    private var backingSection: some View {
-        CardSection(
-            header: "¿Ya tienes el dinero para esta compra?",
-            footer: model.draft.hasMoneySetAside
-                ? "Vamos a reservar ese dinero para pagar la tarjeta antes de la fecha límite. Dejará de aparecer como disponible."
-                : "Se va a sumar a tu deuda y generará intereses. Te mostramos cuánto mueve tu fecha."
-        ) {
-            SegmentedSelector(
-                selection: $model.draft.hasMoneySetAside,
-                options: [true, false],
-                label: { $0 ? "Sí, ya lo tengo" : "No" }
             )
         }
     }

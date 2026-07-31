@@ -21,7 +21,7 @@ struct DebtsView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: Layout.gap) {
+            VStack(spacing: DesignSystem.Space.xl) {
                 ScreenHeader(title: "Deudas") {
                     IconButton(systemImage: "plus", label: "Agregar deuda", isProminent: true) {
                         editing = DebtDraft(currency: model.currency)
@@ -31,7 +31,7 @@ struct DebtsView: View {
                 summaryCard
                 strategyCard
 
-                ForEach(model.orderedDebts) { debt in
+                ForEach(Array(model.orderedDebts.enumerated()), id: \.element.uuid) { index, debt in
                     Button {
                         editing = DebtDraft(debt)
                     } label: {
@@ -42,7 +42,7 @@ struct DebtsView: View {
                             payoffDate: model.payoffDate(for: debt),
                             money: dependencies.money,
                             dates: dependencies.dates,
-                            currency: model.currency
+                            attackRank: model.attackRank(for: debt, at: index)
                         )
                     }
                     .buttonStyle(.plain)
@@ -69,7 +69,9 @@ struct DebtsView: View {
                 }
                 .secondaryButton()
             }
-            .padding(Layout.gutter)
+            .padding(.horizontal, DesignSystem.Space.xxl)
+            .padding(.top, DesignSystem.Space.s)
+            .padding(.bottom, MainTabBar.scrollBottomPadding)
         }
         .screenSurface()
         .sheet(item: $editing) { draft in
@@ -97,7 +99,7 @@ struct DebtsView: View {
 
     private var summaryCard: some View {
         CardContainer {
-            VStack(alignment: .leading, spacing: Layout.gap) {
+            VStack(alignment: .leading, spacing: DesignSystem.Space.l) {
                 StatTile(
                     label: "Deuda total",
                     value: dependencies.money.string(model.totalDebt, currency: model.currency),
@@ -123,7 +125,7 @@ struct DebtsView: View {
 
     private var strategyCard: some View {
         CardContainer {
-            VStack(alignment: .leading, spacing: Layout.gap) {
+            VStack(alignment: .leading, spacing: DesignSystem.Space.l) {
                 SectionHeader(
                     title: "Estrategia",
                     actionTitle: showsStrategy ? "Ocultar" : "Cambiar",
@@ -136,7 +138,7 @@ struct DebtsView: View {
                     .fixedSize(horizontal: false, vertical: true)
 
                 if showsStrategy {
-                    VStack(spacing: Layout.tightGap) {
+                    VStack(spacing: DesignSystem.Space.s) {
                         ForEach(PayoffStrategy.allCases) { strategy in
                             StrategyOptionRow(
                                 strategy: strategy,

@@ -34,6 +34,8 @@ struct ChoiceCard: View {
                         .font(Typography.bodyStrong)
                         .foregroundStyle(Palette.primaryText)
                         .multilineTextAlignment(.leading)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.75)
 
                     if let detail {
                         Text(detail)
@@ -50,6 +52,9 @@ struct ChoiceCard: View {
                     Text(trailing)
                         .font(Typography.amount)
                         .foregroundStyle(Palette.primaryText)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.65)
+                        .layoutPriority(1)
                 }
 
                 if showsSelection {
@@ -95,12 +100,13 @@ struct ChoiceTile: View {
                     .font(Typography.captionStrong)
                     .foregroundStyle(Palette.primaryText)
                     .multilineTextAlignment(.leading)
-                    .fixedSize(horizontal: false, vertical: true)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.8)
 
                 Spacer(minLength: 0)
             }
-            .padding(Layout.gap)
-            .frame(maxWidth: .infinity, minHeight: 92, alignment: .topLeading)
+            .padding(DesignSystem.Space.l)
+            .frame(maxWidth: .infinity, minHeight: 100, alignment: .topLeading)
             // Empty space inside the tile is not hit-testable by default; without
             // this, only the icon, label and radio register a tap.
             .contentShape(RoundedRectangle(cornerRadius: Layout.chipRadius, style: .continuous))
@@ -356,7 +362,7 @@ struct ChoiceStack<Content: View>: View {
     @State private var isVisible = false
 
     var body: some View {
-        VStack(spacing: DesignSystem.Space.s) {
+        VStack(spacing: DesignSystem.Space.m) {
             content()
         }
         .opacity(isVisible ? 1 : 0)

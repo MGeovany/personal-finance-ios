@@ -21,7 +21,7 @@ struct BudgetView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: Layout.gap) {
+            VStack(spacing: DesignSystem.Space.xl) {
                 ScreenHeader(title: "Presupuesto") {
                     IconButton(systemImage: "plus", label: "Nueva categoría", isProminent: true) {
                         showsNewCategory = true
@@ -48,7 +48,9 @@ struct BudgetView: View {
 
                 categoriesCard
             }
-            .padding(Layout.gutter)
+            .padding(.horizontal, DesignSystem.Space.xxl)
+            .padding(.top, DesignSystem.Space.s)
+            .padding(.bottom, MainTabBar.scrollBottomPadding)
         }
         .screenSurface()
         .sheet(item: $editingCategory) { consumption in
@@ -65,7 +67,7 @@ struct BudgetView: View {
 
     private var monthCard: some View {
         CardContainer {
-            VStack(alignment: .leading, spacing: Layout.gap) {
+            VStack(alignment: .leading, spacing: DesignSystem.Space.l) {
                 StatTile(
                     label: "Te queda este mes",
                     value: dependencies.money.string(model.monthTotal.remaining, currency: model.currency),
@@ -81,21 +83,25 @@ struct BudgetView: View {
 
     private var weeksCard: some View {
         CardContainer {
-            VStack(alignment: .leading, spacing: Layout.gap) {
+            VStack(alignment: .leading, spacing: DesignSystem.Space.l) {
                 SectionHeader(title: "Por semana")
 
                 ForEach(model.weeks) { week in
-                    HStack {
+                    HStack(spacing: DesignSystem.Space.s) {
                         Text("Semana \(week.index + 1)")
                             .font(Typography.body)
                             .foregroundStyle(week.index == model.currentWeekIndex ? Palette.primaryText : Palette.secondaryText)
+                            .lineLimit(1)
                         if week.index == model.currentWeekIndex {
                             Chip(text: "Actual", tint: Palette.accent)
                         }
-                        Spacer()
+                        Spacer(minLength: DesignSystem.Space.s)
                         Text(dependencies.money.string(week.amount, currency: model.currency))
                             .font(Typography.amount)
                             .foregroundStyle(Palette.primaryText)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.7)
+                            .layoutPriority(1)
                     }
                 }
 
@@ -111,7 +117,7 @@ struct BudgetView: View {
 
     private var categoriesCard: some View {
         CardContainer {
-            VStack(alignment: .leading, spacing: Layout.gap) {
+            VStack(alignment: .leading, spacing: DesignSystem.Space.l) {
                 SectionHeader(
                     title: "Categorías",
                     actionTitle: "Nueva",
@@ -124,7 +130,7 @@ struct BudgetView: View {
                     } label: {
                         LabeledProgress(
                             title: consumption.categoryName,
-                            leadingValue: dependencies.money.string(consumption.remaining, currency: model.currency),
+                            leadingValue: remainingLabel(for: consumption),
                             trailingValue: caption(for: consumption),
                             fraction: consumption.usedFraction,
                             tint: tint(for: consumption),
@@ -145,11 +151,31 @@ struct BudgetView: View {
 
     // MARK: - Helpers
 
+    private func remainingLabel(for consumption: BudgetConsumption) -> String {
+        if consumption.isOverBudget {
+            return "Sin cupo"
+        }
+        return "Te quedan \(dependencies.money.string(consumption.remaining, currency: model.currency))"
+    }
+
     private func caption(for consumption: BudgetConsumption) -> String {
         let spent = dependencies.money.string(consumption.spent, currency: model.currency)
         let budget = dependencies.money.string(consumption.budget, currency: model.currency)
+
+        if consumption.isOverBudget {
+            return "Ya usaste \(spent). Tu cupo del mes era \(budget)"
+        }
+
+        let used = "Usaste \(spent) de tu cupo de \(budget)"
+
+        // Super in monthly mode is one pot for the month; a weekly split would
+        // contradict the mode the user just picked.
+        if consumption.categoryKey == CategoryKeys.groceries, model.grocery.mode == .monthly {
+            return used
+        }
+
         let weekly = dependencies.money.string(consumption.budget / max(1, model.weeks.count), currency: model.currency)
-        return "\(spent) de \(budget) · \(weekly) por semana"
+        return "\(used) · unos \(weekly) por semana"
     }
 
     private func tint(for consumption: BudgetConsumption) -> Color {

@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// One plan as a selectable card: the date, the payment, and the sentence that
-/// explains the trade-off.
+/// explains the trade-off. Kept airy so three options can sit without feeling dense.
 struct PlanCard: View {
     let plan: FinancialPlan
     let isSelected: Bool
@@ -14,54 +14,68 @@ struct PlanCard: View {
 
     var body: some View {
         Button(action: onSelect) {
-            CardContainer {
-                VStack(alignment: .leading, spacing: Layout.gap) {
-                    header
+            VStack(alignment: .leading, spacing: DesignSystem.Space.xxl) {
+                header
 
-                    Text(plan.freedomDate.map { dates.dayAndMonth($0, relativeTo: Date()) } ?? "Sin fecha")
-                        .font(Typography.statistic)
-                        .foregroundStyle(isSelected ? Palette.accent : Palette.primaryText)
+                Text(plan.freedomDate.map { dates.compactDayAndMonth($0, relativeTo: Date()) } ?? "Sin fecha")
+                    .font(Typography.display(28, .displaySemibold))
+                    .foregroundStyle(isSelected ? Palette.accent : Palette.primaryText)
+                    .minimumScaleFactor(0.6)
+                    .lineLimit(1)
 
-                    HStack(spacing: Layout.sectionGap) {
-                        StatTile(
-                            label: "Pago mensual",
-                            value: money.string(plan.monthlyDebtPayment, currency: currency),
-                            size: .small
-                        )
-                        StatTile(
-                            label: "Gasto semanal",
-                            value: money.string(plan.weekly.averageWeekly, currency: currency),
-                            size: .small
-                        )
-                    }
-
-                    Text(summary)
-                        .font(Typography.body)
-                        .foregroundStyle(Palette.secondaryText)
-                        .fixedSize(horizontal: false, vertical: true)
+                HStack(alignment: .top, spacing: DesignSystem.Space.xxxl) {
+                    StatTile(
+                        label: "Pago mensual",
+                        value: money.string(plan.monthlyDebtPayment, currency: currency),
+                        size: .small
+                    )
+                    StatTile(
+                        label: "Gasto semanal",
+                        value: money.string(plan.weekly.averageWeekly, currency: currency),
+                        size: .small
+                    )
                 }
+
+                Text(summary)
+                    .font(Typography.text(15, .light))
+                    .foregroundStyle(Palette.tertiaryText)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, DesignSystem.Space.xxs)
             }
-            .overlay(
+            .padding(DesignSystem.Space.xxxl)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Palette.surface, in: RoundedRectangle(cornerRadius: Layout.cardRadius, style: .continuous))
+            .overlay {
                 RoundedRectangle(cornerRadius: Layout.cardRadius, style: .continuous)
-                    .strokeBorder(isSelected ? Palette.accent : .clear, lineWidth: 2)
-            )
+                    .strokeBorder(isSelected ? Palette.accent : Color.clear, lineWidth: 1.5)
+            }
+            .softShadow(isSelected ? .floating : .raised)
+            .contentShape(RoundedRectangle(cornerRadius: Layout.cardRadius, style: .continuous))
         }
         .buttonStyle(.plain)
     }
 
     private var header: some View {
-        HStack(spacing: Layout.tightGap) {
+        HStack(alignment: .center, spacing: DesignSystem.Space.m) {
             Text(plan.name)
-                .font(Typography.title)
+                .font(Typography.display(22, .displayBold))
                 .foregroundStyle(Palette.primaryText)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
 
             if isRecommended {
-                Chip(text: "Recomendado", tint: Palette.accent)
+                Text("Recomendado")
+                    .font(Typography.caption)
+                    .foregroundStyle(Palette.secondaryText)
+                    .lineLimit(1)
+                    .padding(.horizontal, DesignSystem.Space.m)
+                    .padding(.vertical, DesignSystem.Space.xs)
+                    .background(Palette.surfaceMuted, in: Capsule())
             }
 
-            Spacer()
+            Spacer(minLength: DesignSystem.Space.s)
 
-            DifficultyDots(difficulty: plan.difficulty)
+            DifficultyBars(difficulty: plan.difficulty)
         }
     }
 }

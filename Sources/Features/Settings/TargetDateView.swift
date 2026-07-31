@@ -22,7 +22,7 @@ struct TargetDateView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: Layout.gap) {
+            VStack(spacing: DesignSystem.Space.xl) {
                 DetailHeader(title: "Fecha objetivo")
 
                 datePickerCard
@@ -32,7 +32,9 @@ struct TargetDateView: View {
                     verdictCard(assessment)
                 }
             }
-            .padding(Layout.gutter)
+            .padding(.horizontal, DesignSystem.Space.xxl)
+            .padding(.top, DesignSystem.Space.s)
+            .padding(.bottom, MainTabBar.scrollBottomPadding)
         }
         .screenSurface()
         .onAppear(perform: evaluate)
@@ -86,7 +88,7 @@ struct TargetDateView: View {
                                     Text(option.date.map { dependencies.dates.dayAndMonth($0, relativeTo: Date()) } ?? "···")
                                         .font(Typography.amount)
                                         .foregroundStyle(planStore.request.speed == option.speed ? Palette.accent : Palette.primaryText)
-                                    DifficultyDots(difficulty: option.difficulty)
+                                    DifficultyBars(difficulty: option.difficulty)
                                 }
                             }
                             .padding(.vertical, 2)

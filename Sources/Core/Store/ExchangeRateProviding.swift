@@ -10,25 +10,26 @@ protocol ExchangeRateProviding: Sendable {
     func convert(_ amount: Money, from source: CurrencyCode, to target: CurrencyCode) -> Money
 }
 
-/// Built-in approximate rates, used so a card in dollars can sit next to a salary
-/// in lempiras without blocking the user on a network call.
+/// Converts with a table that never changes.
+///
+/// Used where the network has no business being involved: previews, and anywhere a
+/// fixed rate makes a result reproducible. The app itself uses
+/// `LiveExchangeRateProvider`, which starts from this same bundled table and replaces
+/// it as soon as it can reach the rate service.
 struct StaticExchangeRateProvider: ExchangeRateProviding {
-    /// Units of each currency per one US dollar.
-    private let perUSD: [CurrencyCode: Double] = [
-        .usd: 1,
-        .hnl: 26.0,
-        .eur: 0.92,
-        .mxn: 18.5,
-        .gtq: 7.8,
-        .crc: 520.0,
-        .cop: 4_000.0,
-    ]
+    let table: ExchangeRateTable
+
+    init(table: ExchangeRateTable = .bundled) {
+        self.table = table
+    }
 
     func convert(_ amount: Money, from source: CurrencyCode, to target: CurrencyCode) -> Money {
         guard source != target else { return amount }
-        guard let sourceRate = perUSD[source], let targetRate = perUSD[target], sourceRate > 0 else {
-            return amount
-        }
+        guard let sourceRate = table.rate(for: source),
+              let targetRate = table.rate(for: target),
+              sourceRate > 0
+        else { return amount }
+
         return amount.scaled(by: targetRate / sourceRate)
     }
 }

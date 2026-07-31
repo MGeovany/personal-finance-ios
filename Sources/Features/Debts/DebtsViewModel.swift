@@ -24,6 +24,9 @@ final class DebtsViewModel {
     var extraPayment: Money { plan.allocation.extraDebtPayment }
 
     /// Outstanding debts in the plan's attack order, then the settled ones.
+    ///
+    /// When two debts share a rank in `attackOrder`, the lower balance comes
+    /// first so the list matches snowball intuition and stays stable.
     var orderedDebts: [DebtEntity] {
         let all = debts.all()
         let order = plan.attackOrder
@@ -32,13 +35,23 @@ final class DebtsViewModel {
             .sorted { lhs, rhs in
                 let left = order.firstIndex(of: lhs.uuid) ?? Int.max
                 let right = order.firstIndex(of: rhs.uuid) ?? Int.max
-                return left < right
+                if left != right { return left < right }
+                if lhs.balance != rhs.balance { return lhs.balance < rhs.balance }
+                return lhs.name.localizedCaseInsensitiveCompare(rhs.name) == .orderedAscending
             }
-        let settled = all.filter { $0.status.isSettled || $0.balance == 0 }
+        let settled = all
+            .filter { $0.status.isSettled || $0.balance == 0 }
+            .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
         return active + settled
     }
 
     var targetDebtID: UUID? { plan.nextTargetDebtID }
+
+    /// 1-based rank for active debts in attack order. Settled debts get no rank.
+    func attackRank(for debt: DebtEntity, at index: Int) -> Int? {
+        guard debt.status.participatesInProjection, debt.balance > 0 else { return nil }
+        return index + 1
+    }
 
     func payoffDate(for debt: DebtEntity) -> Date? {
         plan.projection.payoffDateByDebt[debt.uuid]

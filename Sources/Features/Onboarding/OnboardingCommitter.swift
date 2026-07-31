@@ -67,6 +67,7 @@ struct OnboardingCommitter: OnboardingCommitting {
         profile.notificationsEnabled = draft.remindersEnabled
         profile.reminderHour = draft.reminderHour
         profile.reminderMinute = 0
+        profile.paydaySchedule = draft.paydaySchedule
         profiles.save()
     }
 

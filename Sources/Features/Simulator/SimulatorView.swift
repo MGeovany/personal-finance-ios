@@ -21,7 +21,7 @@ struct SimulatorView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: Layout.gap) {
+            VStack(spacing: DesignSystem.Space.xl) {
                 DetailHeader(title: "¿Qué pasa si...?")
 
                 scenarioPicker
@@ -41,7 +41,9 @@ struct SimulatorView: View {
                     }
                 }
             }
-            .padding(Layout.gutter)
+            .padding(.horizontal, DesignSystem.Space.xxl)
+            .padding(.top, DesignSystem.Space.s)
+            .padding(.bottom, MainTabBar.scrollBottomPadding)
         }
         .screenSurface()
     }
@@ -66,7 +68,8 @@ struct SimulatorView: View {
                                 Text(scenario.label)
                                     .font(Typography.caption)
                                     .multilineTextAlignment(.center)
-                                    .fixedSize(horizontal: false, vertical: true)
+                                    .lineLimit(2)
+                                    .minimumScaleFactor(0.8)
                             }
                             .foregroundStyle(isSelected ? Palette.invertedText : Palette.secondaryText)
                             .frame(maxWidth: .infinity)

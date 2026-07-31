@@ -33,15 +33,18 @@ targets:
         # The interface is a single white monochrome surface; a dark variant would
         # be a different design, not an inversion of this one.
         UIUserInterfaceStyle: Light
+        # Every typeface the project carries ships, so `Typeface.active` is the only
+        # thing that has to change to swap the app's type. Google Sans Flex arrives as
+        # one file per weight; the other two are variable fonts whose weights are
+        # named instances inside a single file.
         UIAppFonts:
-          - Inter-Light.ttf
-          - Inter-Regular.ttf
-          - Inter-Medium.ttf
-          - Inter-SemiBold.ttf
-          - Inter-Bold.ttf
-          - InterDisplay-Regular.ttf
-          - InterDisplay-SemiBold.ttf
-          - InterDisplay-Bold.ttf
+          - GoogleSansFlex-Light.ttf
+          - GoogleSansFlex-Regular.ttf
+          - GoogleSansFlex-Medium.ttf
+          - GoogleSansFlex-SemiBold.ttf
+          - GoogleSansFlex-Bold.ttf
+          - Quicksand-Variable.ttf
+          - ElmsSans-Variable.ttf
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.mgeovany.cero

@@ -70,7 +70,7 @@ struct OnboardingDebtAmountsStep: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Layout.sectionGap) {
+        VStack(alignment: .leading, spacing: DesignSystem.Space.xxxl) {
             if model.draft.wantsCreditCards || !creditCards.isEmpty {
                 creditCardsSection
             }
@@ -200,8 +200,8 @@ private struct DebtAnswerCard: View {
     @State private var showsDetails = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Layout.gap) {
-            HStack(spacing: Layout.gap) {
+        VStack(alignment: .leading, spacing: DesignSystem.Space.l) {
+            HStack(spacing: DesignSystem.Space.l) {
                 Image(systemName: debt.kind.icon)
                     .font(.system(size: 18, weight: .medium))
                     .foregroundStyle(Palette.primaryText)
@@ -211,6 +211,8 @@ private struct DebtAnswerCard: View {
                 Text(debt.kind.label)
                     .font(Typography.titleSmall)
                     .foregroundStyle(Palette.primaryText)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
             }
 
             AmountChoices(

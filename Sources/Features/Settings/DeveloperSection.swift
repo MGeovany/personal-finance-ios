@@ -36,15 +36,6 @@ struct DeveloperSection: View {
             ) {
                 isConfirmingReset = true
             }
-
-            RowDivider()
-
-            NavigationLink {
-                ComponentGallery()
-            } label: {
-                NavRow(title: "Componentes", icon: "square.on.square")
-            }
-            .buttonStyle(.plain)
         }
         .confirmationDrawer(
             isPresented: $isConfirmingReset,

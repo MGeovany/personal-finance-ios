@@ -28,6 +28,14 @@ final class ProfileEntity {
     var planNamesRaw: [String: String]
     var createdAt: Date
 
+    /// When the money arrives, which is when the app asks for the abonos. Optional
+    /// because the app has to work for somebody who skipped the question, and because
+    /// stores written before this existed will not have it.
+    var paydayFrequencyRaw: String?
+    var paydayPrimaryDay: Int?
+    var paydaySecondaryDay: Int?
+    var paydayAnchor: Date?
+
     init(
         displayName: String = "",
         currency: CurrencyCode = .hnl,
@@ -89,6 +97,29 @@ extension ProfileEntity {
     var groceryMode: GroceryMode {
         get { GroceryMode(rawValue: groceryModeRaw) ?? .recommended }
         set { groceryModeRaw = newValue.rawValue }
+    }
+
+    /// The payday schedule, present only once the user has answered.
+    var paydaySchedule: PaydaySchedule? {
+        get {
+            guard let raw = paydayFrequencyRaw,
+                  let frequency = PaydayFrequency(rawValue: raw),
+                  let day = paydayPrimaryDay
+            else { return nil }
+
+            return PaydaySchedule(
+                frequency: frequency,
+                primaryDay: day,
+                secondaryDay: paydaySecondaryDay,
+                anchor: paydayAnchor
+            )
+        }
+        set {
+            paydayFrequencyRaw = newValue?.frequency.rawValue
+            paydayPrimaryDay = newValue?.primaryDay
+            paydaySecondaryDay = newValue?.secondaryDay
+            paydayAnchor = newValue?.anchor
+        }
     }
 
     var planNames: [PlanSpeed: String] {

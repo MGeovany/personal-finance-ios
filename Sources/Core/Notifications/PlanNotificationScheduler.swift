@@ -18,12 +18,23 @@ struct PlanNotificationScheduler: PlanNotificationScheduling {
         (try? await center.requestAuthorization(options: [.alert, .sound, .badge])) ?? false
     }
 
-    func reschedule(for plan: FinancialPlan, snapshot: FinancialSnapshot, reminder: DailyReminder) async {
+    func reschedule(
+        for plan: FinancialPlan,
+        snapshot: FinancialSnapshot,
+        reminder: DailyReminder,
+        payday: PaydayReminder?
+    ) async {
         await cancelAll()
         guard reminder.isEnabled else { return }
 
-        for planned in content.notifications(for: plan, snapshot: snapshot, reminder: reminder) {
-            try? await center.add(request(for: planned))
+        let planned = content.notifications(
+            for: plan,
+            snapshot: snapshot,
+            reminder: reminder,
+            payday: payday
+        )
+        for notification in planned {
+            try? await center.add(request(for: notification))
         }
     }
 
@@ -40,7 +51,12 @@ struct PlanNotificationScheduler: PlanNotificationScheduling {
         return UNNotificationRequest(
             identifier: planned.id,
             content: body,
-            trigger: UNCalendarNotificationTrigger(dateMatching: components(for: planned.trigger), repeats: true)
+            trigger: UNCalendarNotificationTrigger(
+                dateMatching: components(for: planned.trigger),
+                // A one-off must not repeat, or a nudge about a payday three days ago
+                // would come back every month forever.
+                repeats: planned.trigger.repeats
+            )
         )
     }
 
@@ -54,6 +70,13 @@ struct PlanNotificationScheduler: PlanNotificationScheduling {
             parts.day = day
             parts.hour = hour
             parts.minute = minute
+        case .weekly(let weekday, let hour, let minute):
+            parts.weekday = weekday
+            parts.hour = hour
+            parts.minute = minute
+        case .once(let date):
+            // Down to the minute, so the trigger names one moment rather than a rule.
+            parts = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: date)
         }
         return parts
     }

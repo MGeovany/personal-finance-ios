@@ -14,11 +14,11 @@ struct ExpenseOutcomeView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: Layout.gap) {
+            VStack(spacing: DesignSystem.Space.xl) {
                 headline
 
                 CardContainer {
-                    VStack(alignment: .leading, spacing: Layout.gap) {
+                    VStack(alignment: .leading, spacing: DesignSystem.Space.l) {
                         DetailRow(
                             label: "Queda en \(categoryName.lowercased())",
                             value: format(outcome.categoryRemaining)
@@ -55,15 +55,16 @@ struct ExpenseOutcomeView: View {
                     Button("Agregar otro gasto", action: onAddAnother).secondaryButton()
                     Button("Listo", action: onDone).primaryButton()
                 }
-                .padding(.top, Layout.tightGap)
+                .padding(.top, DesignSystem.Space.s)
             }
-            .padding(Layout.gutter)
+            .padding(.horizontal, DesignSystem.Space.xxl)
+            .padding(.vertical, DesignSystem.Space.xxl)
         }
         .background(Palette.canvas)
     }
 
     private var headline: some View {
-        VStack(spacing: Layout.tightGap) {
+        VStack(spacing: DesignSystem.Space.s) {
             Image(systemName: outcome.isWithinPlan ? "checkmark.circle.fill" : "info.circle.fill")
                 .font(.system(size: 34))
                 .foregroundStyle(outcome.isWithinPlan ? Palette.positive : Palette.caution)
@@ -71,13 +72,15 @@ struct ExpenseOutcomeView: View {
             Text("Gastaste \(format(amount))")
                 .font(Typography.title)
                 .foregroundStyle(Palette.primaryText)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
 
             Text(statusLine)
                 .font(Typography.body)
                 .foregroundStyle(Palette.secondaryText)
                 .multilineTextAlignment(.center)
         }
-        .padding(.vertical, Layout.gap)
+        .padding(.vertical, DesignSystem.Space.l)
     }
 
     private var statusLine: String {

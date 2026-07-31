@@ -10,7 +10,10 @@ struct HomeView: View {
     @State private var route: Route?
 
     private enum Route: Identifiable, Hashable {
-        case addExpense, registerPayment, plans, dailyReview, monthlyClose
+        case registerPayment, dailyReview, briefing
+        /// The screen where a specific number can be changed. Opened from the briefing
+        /// rows, so "no me alcanza" leads somewhere instead of just being read.
+        case budget, strategy
 
         var id: Int { hashValue }
     }
@@ -22,37 +25,46 @@ struct HomeView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: Layout.gap) {
-                ScreenHeader(title: "Hoy", subtitle: greeting) {
-                    IconButton(systemImage: "checklist", label: "Revisión de hoy") {
-                        route = .dailyReview
-                    }
+            VStack(spacing: DesignSystem.Space.xl) {
+                greetingHeader
+
+                // On a payday, and until an abono is registered, this is what the screen
+                // is for. Everything else keeps reporting below it.
+                if model.showsPaydayBanner {
+                    PaydayBanner(
+                        status: model.paydayStatus,
+                        payments: model.briefingPaymentRows,
+                        savingsContribution: model.savingsContribution,
+                        money: dependencies.money,
+                        dates: dependencies.dates,
+                        currency: model.currency,
+                        onRegister: { route = .registerPayment }
+                    )
                 }
 
-                HomeHeaderCard(
-                    totalDebt: model.totalDebt,
-                    debtChange: model.debtChangeThisMonth,
-                    freedomDate: model.freedomDate,
-                    monthsToFreedom: model.monthsToFreedom,
-                    planName: model.plan.name,
-                    money: dependencies.money,
-                    dates: dependencies.dates,
-                    currency: model.currency,
-                    onChangePlan: { route = .plans }
-                )
-
-                if model.needsDailyReview {
-                    reviewPrompt
-                }
-
-                warningsSection
-
-                SpendingRoomCard(
+                WeeklyStatusCard(
                     week: model.weekBudget,
                     month: model.monthBudget,
+                    days: model.weekDays,
+                    deliveryOrdersUsed: model.deliveryOrdersUsed,
+                    deliveryOrdersAllowed: model.deliveryOrdersAllowed,
+                    outingsSpent: model.outingsMonthSpent,
+                    outingsBudget: model.outingsMonthBudget,
                     spentToday: model.spentToday,
                     money: dependencies.money,
                     currency: model.currency
+                )
+
+                PlanBriefingSection(
+                    items: model.briefingItems,
+                    paymentRows: model.briefingPaymentRows,
+                    onOpenFull: { route = .briefing },
+                    onEdit: { editable in
+                        switch editable {
+                        case .categoryBudget: route = .budget
+                        case .strategy: route = .strategy
+                        }
+                    }
                 )
 
                 NextPaymentCard(
@@ -71,44 +83,130 @@ struct HomeView: View {
                 upcomingSection
                 goalsSection
             }
-            .padding(.horizontal, Layout.gutter)
-            .padding(.bottom, Layout.sectionGap * 3)
+            .padding(.horizontal, DesignSystem.Space.xxl)
+            .padding(.top, DesignSystem.Space.s)
+            .padding(.bottom, MainTabBar.scrollBottomPadding)
         }
         .screenSurface()
-        .safeAreaInset(edge: .bottom) { actionBar }
         .sheet(item: $route) { destination in
             sheet(for: destination)
+        }
+        .onChange(of: route) { previous, current in
+            // Coming back from registering a payment changes whether the payday nudges
+            // are still needed, and those are booked per day rather than repeating, so
+            // they have to be rebuilt rather than left to expire.
+            guard previous == .registerPayment, current == nil else { return }
+            model.refresh()
+            Task { await dependencies.refreshReminders() }
         }
         .onAppear { model.refresh() }
     }
 
     // MARK: - Sections
 
-    private var reviewPrompt: some View {
-        InfoBanner(
-            message: "¿Ya agregaste tus gastos de hoy? Revisa tus transacciones en Wallet y en tus aplicaciones bancarias.",
-            severity: .info,
-            icon: "checklist",
-            action: (title: "Revisar ahora", handler: { route = .dailyReview })
-        )
-    }
+    /// Greeting in thin type on its own line; the name below, larger. The name is
+    /// the personal signal; the time of day is just quiet context above it.
+    private var greetingHeader: some View {
+        HStack(alignment: .top, spacing: Layout.gap) {
+            greetingTitle
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(greetingAccessibilityLabel)
 
-    /// Uses the name from setup when there is one. Absent, the header simply says
-    /// "Hoy", which is what it said before anybody was asked.
-    private var greeting: String? {
-        dependencies.profile.greetingName.map { "Hola, \($0)" }
+            Spacer(minLength: 0)
+
+            HStack(spacing: DesignSystem.Space.s) {
+                IconButton(systemImage: "checklist", label: "Revisión de hoy") {
+                    route = .dailyReview
+                }
+                NavigationLink {
+                    SettingsView(dependencies: dependencies)
+                        .navigationBarBackButtonHidden(true)
+                } label: {
+                    Image(systemName: "gearshape")
+                }
+                .iconButton()
+                .accessibilityLabel("Ajustes")
+            }
+        }
+        .padding(.top, DesignSystem.Space.s)
+        .padding(.bottom, DesignSystem.Space.xxs)
     }
 
     @ViewBuilder
-    private var warningsSection: some View {
-        if !model.warnings.isEmpty {
-            VStack(spacing: Layout.tightGap) {
-                ForEach(model.warnings.prefix(3)) { warning in
-                    InfoBanner(
-                        message: dependencies.warnings.message(for: warning),
-                        severity: warning.severity
-                    )
+    private var greetingTitle: some View {
+        let greeting = dayPartGreeting
+        if let name = dependencies.profile.greetingName, !name.isEmpty {
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: DesignSystem.Space.s) {
+                    Image(systemName: dayPartIcon)
+                        .font(.system(size: 16, weight: .light))
+                        .foregroundStyle(Palette.secondaryText)
+                        .symbolRenderingMode(.hierarchical)
+
+                    Text("\(greeting),")
+                        .font(Typography.display(22, .light))
+                        .foregroundStyle(Palette.secondaryText)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
                 }
+
+                Text(name)
+                    .font(Typography.display(40, .displayBold))
+                    .foregroundStyle(Palette.primaryText)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.55)
+            }
+        } else {
+            HStack(spacing: DesignSystem.Space.s) {
+                Image(systemName: dayPartIcon)
+                    .font(.system(size: 22, weight: .light))
+                    .foregroundStyle(Palette.primaryText)
+                    .symbolRenderingMode(.hierarchical)
+
+                Text(greeting)
+                    .font(Typography.display(34, .displayBold))
+                    .foregroundStyle(Palette.primaryText)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.55)
+            }
+        }
+    }
+
+    private var greetingAccessibilityLabel: String {
+        if let name = dependencies.profile.greetingName, !name.isEmpty {
+            return "\(dayPartGreeting), \(name)"
+        }
+        return dayPartGreeting
+    }
+
+    private var dayPart: DayPart {
+        switch Calendar.current.component(.hour, from: Date()) {
+        case 5..<12: .morning
+        case 12..<19: .afternoon
+        default: .night
+        }
+    }
+
+    private var dayPartGreeting: String { dayPart.greeting }
+
+    private var dayPartIcon: String { dayPart.icon }
+
+    private enum DayPart {
+        case morning, afternoon, night
+
+        var greeting: String {
+            switch self {
+            case .morning: "Buenos días"
+            case .afternoon: "Buenas tardes"
+            case .night: "Buenas noches"
+            }
+        }
+
+        var icon: String {
+            switch self {
+            case .morning: "sun.max"
+            case .afternoon: "sunset"
+            case .night: "moon"
             }
         }
     }
@@ -117,7 +215,7 @@ struct HomeView: View {
     private var upcomingSection: some View {
         if !model.upcomingDueDebts.isEmpty || !model.upcomingSubscriptions.isEmpty || model.reservedUtilities > 0 {
             CardContainer {
-                VStack(alignment: .leading, spacing: Layout.gap) {
+                VStack(alignment: .leading, spacing: DesignSystem.Space.l) {
                     SectionHeader(title: "Lo que viene")
 
                     ForEach(model.upcomingDueDebts) { debt in
@@ -154,7 +252,7 @@ struct HomeView: View {
     private var goalsSection: some View {
         if !model.activeGoals.isEmpty {
             CardContainer {
-                VStack(alignment: .leading, spacing: Layout.gap) {
+                VStack(alignment: .leading, spacing: DesignSystem.Space.l) {
                     SectionHeader(title: "Tus metas")
 
                     ForEach(model.activeGoals) { goal in
@@ -181,53 +279,25 @@ struct HomeView: View {
 
     // MARK: - Actions
 
-    private var actionBar: some View {
-        HStack(spacing: Layout.gap) {
-            Button {
-                route = .addExpense
-            } label: {
-                Label("Agregar gasto", systemImage: "plus")
-            }
-            .primaryButton()
-
-            IconButton(
-                systemImage: "arrow.down",
-                label: "Registrar pago",
-                size: Layout.controlHeight
-            ) {
-                route = .registerPayment
-            }
-        }
-        .padding(.horizontal, Layout.gutter)
-        .padding(.vertical, Layout.gap)
-        .background {
-            // A soft fade rather than a bar, so the buttons read as floating over
-            // the page the way the rest of the surfaces do.
-            LinearGradient(
-                colors: [Palette.canvas.opacity(0), Palette.canvas, Palette.canvas],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .ignoresSafeArea()
-        }
-    }
-
     @ViewBuilder
     private func sheet(for destination: Route) -> some View {
         switch destination {
-        case .addExpense:
-            AddExpenseSheet(dependencies: dependencies)
         case .registerPayment:
             RegisterPaymentSheet(dependencies: dependencies)
-        case .plans:
-            NavigationStack {
-                PlanComparisonView(dependencies: dependencies)
-            }
-            .modalPresentation()
         case .dailyReview:
             DailyReviewSheet(dependencies: dependencies)
-        case .monthlyClose:
-            MonthlyCloseSheet(dependencies: dependencies)
+        case .briefing:
+            BriefingView(dependencies: dependencies) { route = nil }
+        case .budget:
+            NavigationStack {
+                BudgetView(dependencies: dependencies)
+            }
+            .modalPresentation()
+        case .strategy:
+            NavigationStack {
+                DebtsView(dependencies: dependencies)
+            }
+            .modalPresentation()
         }
     }
 }

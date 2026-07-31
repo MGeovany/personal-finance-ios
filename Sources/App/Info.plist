@@ -22,14 +22,13 @@
 	<string>1</string>
 	<key>UIAppFonts</key>
 	<array>
-		<string>Inter-Light.ttf</string>
-		<string>Inter-Regular.ttf</string>
-		<string>Inter-Medium.ttf</string>
-		<string>Inter-SemiBold.ttf</string>
-		<string>Inter-Bold.ttf</string>
-		<string>InterDisplay-Regular.ttf</string>
-		<string>InterDisplay-SemiBold.ttf</string>
-		<string>InterDisplay-Bold.ttf</string>
+		<string>GoogleSansFlex-Light.ttf</string>
+		<string>GoogleSansFlex-Regular.ttf</string>
+		<string>GoogleSansFlex-Medium.ttf</string>
+		<string>GoogleSansFlex-SemiBold.ttf</string>
+		<string>GoogleSansFlex-Bold.ttf</string>
+		<string>Quicksand-Variable.ttf</string>
+		<string>ElmsSans-Variable.ttf</string>
 	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>

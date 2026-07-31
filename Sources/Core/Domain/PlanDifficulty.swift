@@ -26,8 +26,11 @@ enum PlanDifficulty: Int, CaseIterable, Comparable, Sendable {
         }
     }
 
-    /// Filled dots out of four, for the comparison screen.
-    var dots: Int { rawValue }
+    /// How many of the four steps are filled, for the indicator on a plan card.
+    var filledSteps: Int { rawValue }
+
+    /// Total steps the indicator draws, so the view and the scale cannot drift apart.
+    static let steps = PlanDifficulty.allCases.count
 
     static func < (lhs: PlanDifficulty, rhs: PlanDifficulty) -> Bool {
         lhs.rawValue < rhs.rawValue

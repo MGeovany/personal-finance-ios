@@ -46,9 +46,9 @@ struct ModalScaffold<Content: View>: View {
                 VStack(alignment: .leading, spacing: spacing) {
                     content()
                 }
-                .padding(.horizontal, Layout.gutter)
-                .padding(.top, Layout.gap)
-                .padding(.bottom, Layout.sectionGap)
+                .padding(.horizontal, DesignSystem.Space.xxl)
+                .padding(.top, DesignSystem.Space.l)
+                .padding(.bottom, DesignSystem.Space.xxxl)
             }
             .scrollDismissesKeyboard(.interactively)
 
@@ -81,8 +81,8 @@ struct ModalScaffold<Content: View>: View {
                 }
             }
         }
-        .padding(.horizontal, Layout.gutter)
-        .padding(.top, Layout.gutter)
+        .padding(.horizontal, DesignSystem.Space.xxl)
+        .padding(.top, DesignSystem.Space.xxl)
         .padding(.bottom, DesignSystem.Space.s)
     }
 
@@ -107,8 +107,8 @@ struct ModalScaffold<Content: View>: View {
                         .quietButton(tint: secondary.isDestructive ? Palette.critical : Palette.secondaryText)
                 }
             }
-            .padding(.horizontal, Layout.gutter)
-            .padding(.top, Layout.gap)
+            .padding(.horizontal, DesignSystem.Space.xxl)
+            .padding(.top, DesignSystem.Space.l)
             .padding(.bottom, DesignSystem.Space.s)
             .background(alignment: .top) {
                 // Enough of a lift that the button never looks like it is floating

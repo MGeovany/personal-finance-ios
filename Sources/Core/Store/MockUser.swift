@@ -143,10 +143,10 @@ struct MockUser {
     private func seedBaselines() {
         let baselines: [String: Money] = [
             CategoryKeys.groceries: 6_000,
+            CategoryKeys.delivery: 1_500,
+            CategoryKeys.online: 1_200,
             CategoryKeys.transport: 2_500,
             CategoryKeys.outings: 3_000,
-            CategoryKeys.restaurants: 2_000,
-            CategoryKeys.health: 800,
             CategoryKeys.unexpected: 1_500,
         ]
 
@@ -175,9 +175,9 @@ struct MockUser {
         let entries: [(days: Int, amount: Money, merchant: String, key: String, method: PaymentMethod)] = [
             (0, 450, "La Colonia", CategoryKeys.groceries, .cash),
             (0, 180, "Uber", CategoryKeys.transport, .debit),
-            (1, 620, "Cena", CategoryKeys.restaurants, .cash),
-            (2, 1_250, "Supermercado", CategoryKeys.groceries, .debit),
-            (3, 300, "Farmacia", CategoryKeys.pharmacy, .cash),
+            (1, 320, "Pedidos Ya", CategoryKeys.delivery, .cash),
+            (2, 1_250, "Super", CategoryKeys.groceries, .debit),
+            (3, 890, "Amazon", CategoryKeys.online, .creditCard),
             (4, 900, "Salida", CategoryKeys.outings, .cash),
         ]
 

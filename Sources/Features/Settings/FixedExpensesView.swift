@@ -9,7 +9,7 @@ struct FixedExpensesView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: Layout.gap) {
+            VStack(spacing: DesignSystem.Space.xl) {
                 DetailHeader(title: "Gastos fijos")
 
                 if !items.isEmpty {
@@ -48,7 +48,9 @@ struct FixedExpensesView: View {
                 }
                 .secondaryButton()
             }
-            .padding(Layout.gutter)
+            .padding(.horizontal, DesignSystem.Space.xxl)
+            .padding(.top, DesignSystem.Space.s)
+            .padding(.bottom, MainTabBar.scrollBottomPadding)
         }
         .screenSurface()
         .sheet(item: $editing) { draft in
@@ -100,7 +102,7 @@ struct IncomeListView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: Layout.gap) {
+            VStack(spacing: DesignSystem.Space.xl) {
                 DetailHeader(title: "Otros ingresos")
 
                 ForEach(items) { item in
@@ -132,7 +134,9 @@ struct IncomeListView: View {
                 }
                 .secondaryButton()
             }
-            .padding(Layout.gutter)
+            .padding(.horizontal, DesignSystem.Space.xxl)
+            .padding(.top, DesignSystem.Space.s)
+            .padding(.bottom, MainTabBar.scrollBottomPadding)
         }
         .screenSurface()
         .sheet(item: $editing) { draft in

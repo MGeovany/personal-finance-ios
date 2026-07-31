@@ -32,7 +32,7 @@ struct OnboardingFlowView: View {
     @ViewBuilder
     private var header: some View {
         if !model.step.isFirst {
-            VStack(spacing: Layout.gap) {
+            VStack(spacing: DesignSystem.Space.l) {
                 HStack {
                     IconButton(systemImage: "chevron.left", label: "Volver") { model.goBack() }
 
@@ -43,6 +43,7 @@ struct OnboardingFlowView: View {
                     Text(model.step.isLast ? "Ya está" : "\(model.progress.index) de \(model.progress.total)")
                         .font(Typography.captionStrong)
                         .foregroundStyle(Palette.tertiaryText)
+                        .lineLimit(1)
                         .contentTransition(.numericText())
 
                     Spacer(minLength: 0)
@@ -57,37 +58,56 @@ struct OnboardingFlowView: View {
                 )
                 .animation(DesignSystem.Motion.swap, value: model.progress.index)
             }
-            .padding(.horizontal, Layout.gutter)
-            .padding(.top, Layout.gap)
+            .padding(.horizontal, DesignSystem.Space.xxl)
+            .padding(.top, DesignSystem.Space.l)
         }
     }
 
     @ViewBuilder
     private var question: some View {
         if model.step == .welcome {
-            // Welcome owns the whole composition. Brand, line, breathing room . 
+            // Welcome owns the whole composition. Brand, line, breathing room,
             // so the shared title chrome would only duplicate it.
             OnboardingWelcomeStep()
-                .padding(.horizontal, Layout.gutter)
+                .padding(.horizontal, DesignSystem.Space.xxl)
         } else {
-            ScrollView {
-                VStack(alignment: .leading, spacing: Layout.sectionGap) {
-                    titleBlock
-                    stepContent
+            ScrollViewReader { proxy in
+                ScrollView {
+                    VStack(alignment: .leading, spacing: DesignSystem.Space.xxxl) {
+                        titleBlock
+                        stepContent
+                    }
+                    .padding(.horizontal, DesignSystem.Space.xxl)
+                    .padding(.bottom, DesignSystem.Space.xxxl)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .padding(.horizontal, Layout.gutter)
-                .padding(.bottom, Layout.sectionGap)
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .scrollDismissesKeyboard(.interactively)
+                .onChange(of: model.draft.goals.count) { previous, count in
+                    // Goals: when a tile is picked, the amount fields appear below
+                    // the fold. Scroll them into view so the next answer is ready.
+                    guard model.step == .goals, count > previous else { return }
+                    Task { @MainActor in
+                        try? await Task.sleep(for: .milliseconds(120))
+                        withAnimation(DesignSystem.Motion.present) {
+                            if let last = model.draft.goals.last {
+                                proxy.scrollTo(last.id, anchor: .center)
+                            } else {
+                                proxy.scrollTo("goalAmounts", anchor: .top)
+                            }
+                        }
+                    }
+                }
             }
-            .scrollDismissesKeyboard(.interactively)
         }
     }
 
     private var titleBlock: some View {
-        VStack(alignment: .leading, spacing: Layout.gap) {
+        VStack(alignment: .leading, spacing: DesignSystem.Space.l) {
             Text(headline)
                 .font(Typography.display(32, .displayBold))
                 .foregroundStyle(Palette.primaryText)
+                .lineLimit(2)
+                .minimumScaleFactor(0.7)
                 .fixedSize(horizontal: false, vertical: true)
 
             if let help = model.step.help {
@@ -97,7 +117,7 @@ struct OnboardingFlowView: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
-        .padding(.top, Layout.sectionGap)
+        .padding(.top, DesignSystem.Space.xxl)
         // The question arrives a beat before its answers, the same way a host
         // asks before offering the options.
         .transition(.opacity.combined(with: .offset(y: 8)))
@@ -141,6 +161,8 @@ struct OnboardingFlowView: View {
             OnboardingSavingsStep(model: model)
         case .goals:
             OnboardingGoalsStep(model: model)
+        case .payday:
+            OnboardingPaydayStep(model: model)
         case .reminders:
             OnboardingRemindersStep(model: model)
         case .review:
@@ -149,7 +171,7 @@ struct OnboardingFlowView: View {
     }
 
     private var footer: some View {
-        VStack(spacing: Layout.tightGap) {
+        VStack(spacing: DesignSystem.Space.s) {
             Button(model.advanceTitle) { model.advance() }
                 .primaryButton(isEnabled: model.canAdvance)
                 .disabled(!model.canAdvance)
@@ -159,10 +181,13 @@ struct OnboardingFlowView: View {
                     .font(Typography.caption)
                     .foregroundStyle(Palette.tertiaryText)
                     .multilineTextAlignment(.center)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.85)
                     .transition(.opacity)
             }
         }
-        .padding(Layout.gutter)
+        .padding(.horizontal, DesignSystem.Space.xxl)
+        .padding(.vertical, DesignSystem.Space.l)
         .background(alignment: .top) {
             // The page colour plus a faint lift, so the button never looks like it
             // is floating over content that has scrolled behind it.

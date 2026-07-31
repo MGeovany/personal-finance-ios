@@ -38,15 +38,15 @@ struct ChargeEditorSheet: View {
 
         /// A fixed expense is the same amount on the same schedule every month, so the
         /// day it leaves changes nothing the plan calculates. Asking for it only adds
-        /// a field. The charges whose dates the app actually acts on, a utility to
-        /// reserve for or a subscription to cancel before it bills, still ask.
-        var asksForDay: Bool { self != .fixedExpense }
+        /// a field. Subscriptions are name + price; the rest defaults to monthly.
+        var asksForDay: Bool { self == .income || self == .utility }
 
         /// `MoneyField` already lets any amount be typed in a second currency, so a
-        /// separate currency row is only worth its space where the charge itself
-        /// belongs to another currency, like a card statement or a subscription
-        /// priced in dollars.
-        var asksForCurrency: Bool { self != .fixedExpense }
+        /// separate currency row is only worth its space for income and utilities.
+        var asksForCurrency: Bool { self == .income || self == .utility }
+
+        /// Frequency only matters when the amount is not already assumed monthly.
+        var asksForFrequency: Bool { self != .subscription }
 
         var namePlaceholder: String {
             switch self {
@@ -78,36 +78,32 @@ struct ChargeEditorSheet: View {
                 MoneyField(title: purpose.amountLabel, amount: $draft.amount, currency: draft.currency)
             }
 
-            CardSection {
-                SelectRow(
-                    title: "Frecuencia",
-                    selection: $draft.frequency,
-                    options: ChargeFrequency.allCases,
-                    label: \.label
-                )
+            if purpose.asksForFrequency || purpose.asksForCurrency || purpose.asksForDay {
+                CardSection {
+                    if purpose.asksForFrequency {
+                        SelectRow(
+                            title: "Frecuencia",
+                            selection: $draft.frequency,
+                            options: ChargeFrequency.allCases,
+                            label: \.label
+                        )
+                    }
 
-                if purpose.asksForCurrency {
-                    RowDivider()
-                    SelectRow(
-                        title: "Moneda",
-                        selection: $draft.currency,
-                        options: currencies,
-                        label: { $0.rawValue },
-                        detail: { $0.displayName }
-                    )
-                }
+                    if purpose.asksForCurrency {
+                        if purpose.asksForFrequency { RowDivider() }
+                        SelectRow(
+                            title: "Moneda",
+                            selection: $draft.currency,
+                            options: currencies,
+                            label: { $0.rawValue },
+                            detail: { $0.displayName }
+                        )
+                    }
 
-                if purpose.asksForDay {
-                    RowDivider()
-                    DayOfMonthPicker(title: purpose.dayLabel, day: $draft.day)
-                }
-            }
-
-            if purpose == .subscription {
-                CardSection(
-                    footer: "Si la marcas como no necesaria, la app te mostrará cuánto adelantarías tu fecha libre de deuda al cancelarla."
-                ) {
-                    CeroToggle(title: "La sigo usando", isOn: $draft.isNecessary)
+                    if purpose.asksForDay {
+                        if purpose.asksForFrequency || purpose.asksForCurrency { RowDivider() }
+                        DayOfMonthPicker(title: purpose.dayLabel, day: $draft.day)
+                    }
                 }
             }
         }

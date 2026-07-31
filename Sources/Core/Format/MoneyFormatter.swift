@@ -23,9 +23,14 @@ struct MoneyFormatter: MoneyFormatting {
     }
 
     func string(_ amount: Money, currency: CurrencyCode) -> String {
-        let magnitude = numberFormatter.string(from: abs(amount) as NSDecimalNumber) ?? "0"
         let sign = amount < 0 ? "−" : ""
-        return "\(sign)\(currency.symbol)\(separator(for: currency))\(magnitude)"
+        return "\(sign)\(currency.symbol)\(separator(for: currency))\(digits(abs(amount)))"
+    }
+
+    func digits(_ amount: Money) -> String {
+        let sign = amount < 0 ? "−" : ""
+        let magnitude = numberFormatter.string(from: abs(amount) as NSDecimalNumber) ?? "0"
+        return "\(sign)\(magnitude)"
     }
 
     func compact(_ amount: Money, currency: CurrencyCode) -> String {

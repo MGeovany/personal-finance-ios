@@ -103,4 +103,24 @@ enum GoalTemplate: String, CaseIterable, Identifiable {
         default: true
         }
     }
+
+    /// How to ask when the goal happens, or nothing when asking would be wrong.
+    ///
+    /// A trip, a car, a move, an event and a purchase all land on a day the user has
+    /// in mind. A cushion and an education do not: they are ongoing, and inventing a
+    /// deadline for them would be the app putting words in the user's mouth. Debt
+    /// freedom has a date, but the plan is what works it out.
+    var dateQuestion: String? {
+        switch self {
+        case .trip: "¿Cuándo es el viaje?"
+        case .car: "¿Qué día piensas comprarlo?"
+        case .computer: "¿Qué día piensas comprarla?"
+        case .moving: "¿Qué día te mudas?"
+        case .event: "¿Qué día es el evento?"
+        case .purchase: "¿Qué día piensas comprarla?"
+        case .debtFree, .emergency, .education, .custom: nil
+        }
+    }
+
+    var asksForDate: Bool { dateQuestion != nil }
 }

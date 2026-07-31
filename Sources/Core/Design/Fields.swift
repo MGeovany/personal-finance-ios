@@ -139,62 +139,58 @@ struct CeroToggle: View {
 /// One choice in a list of them: a row-shaped button that shows whether it is the
 /// current answer.
 ///
-/// Used both inside drawers, where it sits on the page and lifts off it, and inside
-/// cards, for the few choices whose options carry explanations worth reading in
-/// place rather than behind a tap.
+/// A flat list row: icon, label, optional check. No per-option cards; the drawer
+/// or parent card supplies the surface.
 struct OptionRow: View {
     let title: String
     var detail: String?
     var icon: String?
     var isSelected: Bool = false
     var isDestructive: Bool = false
-    /// On when the row sits directly on the page, off when it sits inside a card.
+    /// Kept for call sites; rows are always flat now.
     var isElevated: Bool = false
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: Layout.gap) {
+            HStack(spacing: DesignSystem.Space.m) {
                 if let icon {
                     Image(systemName: icon)
-                        .font(.system(size: 15, weight: .medium))
-                        .frame(width: 22)
+                        .font(.system(size: 17, weight: .regular))
+                        .foregroundStyle(isDestructive ? Palette.critical : Palette.secondaryText)
+                        .frame(width: 24)
                 }
 
-                VStack(alignment: .leading, spacing: 1) {
+                VStack(alignment: .leading, spacing: 2) {
                     Text(title)
-                        .font(Typography.bodyStrong)
+                        .font(Typography.body)
+                        .foregroundStyle(isDestructive ? Palette.critical : Palette.primaryText)
                         .multilineTextAlignment(.leading)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.85)
                     if let detail {
                         Text(detail)
                             .font(Typography.caption)
                             .foregroundStyle(isDestructive ? Palette.critical.opacity(0.7) : Palette.tertiaryText)
                             .multilineTextAlignment(.leading)
-                            .fixedSize(horizontal: false, vertical: true)
+                            .lineLimit(2)
+                            .minimumScaleFactor(0.85)
                     }
                 }
 
-                Spacer(minLength: Layout.gap)
+                Spacer(minLength: DesignSystem.Space.s)
 
                 if isSelected {
                     Image(systemName: "checkmark")
                         .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(Palette.primaryText)
                 }
             }
-            .foregroundStyle(isDestructive ? Palette.critical : Palette.primaryText)
-            .padding(.horizontal, Layout.cardPadding)
+            .padding(.horizontal, DesignSystem.Space.s)
             .padding(.vertical, DesignSystem.Space.m)
-            .frame(minHeight: Layout.controlHeight)
+            .frame(minHeight: Layout.minimumTouch)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(
-                isElevated ? Palette.surface : Palette.surfaceMuted,
-                in: RoundedRectangle(cornerRadius: Layout.chipRadius, style: .continuous)
-            )
-            .overlay {
-                RoundedRectangle(cornerRadius: Layout.chipRadius, style: .continuous)
-                    .strokeBorder(isSelected ? Palette.accent : .clear, lineWidth: 1.5)
-            }
-            .softShadow(isElevated ? .raised : .flush)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }
@@ -244,16 +240,20 @@ struct SelectRow<Value: Hashable>: View {
         .animation(DesignSystem.Motion.swap, value: selection)
         .drawer(isPresented: $isPickerPresented) {
             Drawer(title: title, cancelTitle: "Cancelar") {
-                ForEach(options, id: \.self) { option in
-                    OptionRow(
-                        title: label(option),
-                        detail: detail?(option),
-                        icon: icon?(option),
-                        isSelected: option == selection,
-                        isElevated: true
-                    ) {
-                        selection = option
-                        isPickerPresented = false
+                CardContainer(padding: DesignSystem.Space.xs) {
+                    VStack(spacing: 0) {
+                        ForEach(Array(options.enumerated()), id: \.element) { index, option in
+                            if index > 0 { RowDivider() }
+                            OptionRow(
+                                title: label(option),
+                                detail: detail?(option),
+                                icon: icon?(option),
+                                isSelected: option == selection
+                            ) {
+                                selection = option
+                                isPickerPresented = false
+                            }
+                        }
                     }
                 }
             }
@@ -359,6 +359,72 @@ struct DateRow: View {
     }
 }
 
+/// A date that may not exist yet.
+///
+/// `DateRow` always holds one, which is right for a deadline the user is choosing.
+/// This is for the dates that are genuinely optional: a trip somebody wants to take
+/// without knowing when. It reads as unanswered until it is answered, rather than
+/// defaulting to today and quietly claiming a day the user never picked.
+struct OptionalDateRow: View {
+    let title: String
+    @Binding var date: Date?
+    var placeholder: String = "Sin fecha"
+    /// The day the picker opens on when there is no answer yet. A goal is in the
+    /// future, so today is a poor place to start.
+    var suggestion: Date = Calendar.current.date(byAdding: .month, value: 6, to: Date()) ?? Date()
+
+    @Environment(\.planDates) private var dates
+    @State private var isPresented = false
+
+    var body: some View {
+        Button {
+            isPresented = true
+        } label: {
+            HStack {
+                Text(title).fieldLabel()
+                Spacer(minLength: DesignSystem.Space.s)
+                Text(date.map(dates.full) ?? placeholder)
+                    .font(Typography.bodyStrong)
+                    .foregroundStyle(date == nil ? Palette.tertiaryText : Palette.primaryText)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
+                Image(systemName: "calendar")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(Palette.tertiaryText)
+            }
+            .frame(minHeight: Layout.minimumTouch)
+        }
+        .buttonStyle(.plain)
+        .drawer(isPresented: $isPresented) {
+            Drawer(title: title) {
+                DatePicker(
+                    title,
+                    selection: Binding(
+                        get: { date ?? suggestion },
+                        set: { date = $0 }
+                    ),
+                    in: Date()...,
+                    displayedComponents: .date
+                )
+                .datePickerStyle(.graphical)
+                .labelsHidden()
+                .tint(Palette.accent)
+
+                Button("Listo") { isPresented = false }
+                    .primaryButton()
+
+                if date != nil {
+                    Button("Quitar fecha") {
+                        date = nil
+                        isPresented = false
+                    }
+                    .quietButton()
+                }
+            }
+        }
+    }
+}
+
 /// A time of day, changed in a drawer for the same reason `DateRow` is.
 struct TimeRow: View {
     let title: String
@@ -418,6 +484,8 @@ struct NavRow: View {
             Text(title)
                 .font(Typography.bodyStrong)
                 .foregroundStyle(Palette.primaryText)
+                .lineLimit(1)
+                .minimumScaleFactor(0.75)
 
             Spacer(minLength: DesignSystem.Space.s)
 
@@ -426,6 +494,9 @@ struct NavRow: View {
                     .font(Typography.body)
                     .foregroundStyle(Palette.secondaryText)
                     .multilineTextAlignment(.trailing)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.65)
+                    .layoutPriority(1)
             }
 
             Image(systemName: "chevron.right")

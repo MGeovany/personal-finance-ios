@@ -146,15 +146,19 @@ struct ComponentGallery: View {
         }
         .drawer(isPresented: $showsDrawer) {
             Drawer(title: "Un drawer", message: "Una pregunta, una respuesta.", cancelTitle: "Cancelar") {
-                ForEach(CurrencyCode.allCases, id: \.self) { option in
-                    OptionRow(
-                        title: option.displayName,
-                        detail: option.symbol,
-                        isSelected: option == currency,
-                        isElevated: true
-                    ) {
-                        currency = option
-                        showsDrawer = false
+                CardContainer(padding: DesignSystem.Space.xs) {
+                    VStack(spacing: 0) {
+                        ForEach(Array(CurrencyCode.allCases.enumerated()), id: \.element) { index, option in
+                            if index > 0 { RowDivider() }
+                            OptionRow(
+                                title: option.displayName,
+                                detail: option.symbol,
+                                isSelected: option == currency
+                            ) {
+                                currency = option
+                                showsDrawer = false
+                            }
+                        }
                     }
                 }
             }

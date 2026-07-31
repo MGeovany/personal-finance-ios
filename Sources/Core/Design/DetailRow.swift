@@ -22,10 +22,14 @@ struct DetailRow: View {
                 Text(label)
                     .font(Typography.body)
                     .foregroundStyle(Palette.secondaryText)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
                 if let caption {
                     Text(caption)
                         .font(Typography.caption)
                         .foregroundStyle(Palette.tertiaryText)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
                 }
             }
 
@@ -35,6 +39,9 @@ struct DetailRow: View {
                 .font(Typography.amount)
                 .foregroundStyle(tint)
                 .multilineTextAlignment(.trailing)
+                .lineLimit(1)
+                .minimumScaleFactor(0.65)
+                .layoutPriority(1)
         }
     }
 }

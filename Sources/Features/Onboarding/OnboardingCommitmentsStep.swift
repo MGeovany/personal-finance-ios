@@ -8,7 +8,7 @@ struct OnboardingCommitmentsStep: View {
     @Bindable var model: OnboardingViewModel
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Layout.sectionGap) {
+        VStack(alignment: .leading, spacing: DesignSystem.Space.xxxl) {
             ForEach(CommitmentTemplate.Bucket.allCases, id: \.self) { bucket in
                 group(bucket)
             }
@@ -53,7 +53,7 @@ struct OnboardingCommitmentAmountsStep: View {
     @State private var editingStreaming: ChargeDraft?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Layout.sectionGap) {
+        VStack(alignment: .leading, spacing: DesignSystem.Space.xxxl) {
             ForEach(CommitmentTemplate.Bucket.allCases, id: \.self) { bucket in
                 let rows = CommitmentTemplate.all(in: bucket).filter { model.draft.commitments.contains($0) }
                 if !rows.isEmpty {

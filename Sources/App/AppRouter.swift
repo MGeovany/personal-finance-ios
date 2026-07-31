@@ -13,6 +13,9 @@ final class AppRouter {
         case onboarding
         /// Setup is saved and the three plans are ready to compare.
         case planChoice
+        /// The chosen plan explained card by card, before the app itself. Setup ends
+        /// with a date and no instructions, and this is the handover.
+        case briefing
         case main
     }
 

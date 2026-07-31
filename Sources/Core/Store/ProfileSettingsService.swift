@@ -18,6 +18,8 @@ protocol PlanPreferencing {
     func setEmergencyFund(_ amount: Money)
     func setSavings(_ amount: Money)
     func setReminder(hour: Int, minute: Int, enabled: Bool)
+    /// Nil turns the payday reminders off entirely.
+    func setPaydaySchedule(_ schedule: PaydaySchedule?)
     func completeOnboarding()
 }
 
@@ -80,6 +82,10 @@ struct ProfileSettingsService: PlanPreferencing {
             $0.reminderMinute = minute
             $0.notificationsEnabled = enabled
         }
+    }
+
+    func setPaydaySchedule(_ schedule: PaydaySchedule?) {
+        update { $0.paydaySchedule = schedule }
     }
 
     func completeOnboarding() {

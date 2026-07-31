@@ -17,11 +17,15 @@ struct ScreenHeader<Accessory: View>: View {
                 Text(title)
                     .font(Typography.display(34, .displayBold))
                     .foregroundStyle(Palette.primaryText)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.55)
 
                 if let subtitle {
                     Text(subtitle)
                         .font(Typography.body)
                         .foregroundStyle(Palette.tertiaryText)
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.85)
                 }
             }
 
@@ -63,12 +67,15 @@ struct DetailHeader<Accessory: View>: View {
                 Text(title)
                     .font(Typography.display(28, .displayBold))
                     .foregroundStyle(Palette.primaryText)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.55)
 
                 if let subtitle {
                     Text(subtitle)
                         .font(Typography.body)
                         .foregroundStyle(Palette.tertiaryText)
-                        .fixedSize(horizontal: false, vertical: true)
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.85)
                 }
             }
         }
@@ -100,6 +107,10 @@ extension View {
             .ignoresSafeArea()
         }
         .toolbar(.hidden, for: .navigationBar)
+        .toolbarBackground(.hidden, for: .navigationBar)
+        // Screens draw `DetailHeader` / `ScreenHeader` themselves, so the system
+        // chrome (including the back chevron) stays out of the way.
+        .navigationBarBackButtonHidden(true)
     }
 }
 
@@ -111,12 +122,16 @@ struct SectionHeader: View {
 
     var body: some View {
         HStack(alignment: .firstTextBaseline) {
-            Text(title).sectionHeaderStyle()
-            Spacer()
+            Text(title)
+                .sectionHeaderStyle()
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+            Spacer(minLength: DesignSystem.Space.s)
             if let actionTitle, let action {
                 Button(actionTitle, action: action)
                     .font(Typography.captionStrong)
                     .foregroundStyle(Palette.accent)
+                    .lineLimit(1)
             }
         }
     }

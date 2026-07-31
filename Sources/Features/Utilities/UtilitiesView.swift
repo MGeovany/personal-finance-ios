@@ -22,7 +22,7 @@ struct UtilitiesView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: Layout.gap) {
+            VStack(spacing: DesignSystem.Space.xl) {
                 DetailHeader(title: "Servicios") {
                     IconButton(systemImage: "plus", label: "Agregar servicio", isProminent: true) {
                         editing = ChargeDraft(currency: model.currency)
@@ -52,7 +52,9 @@ struct UtilitiesView: View {
                 }
                 .secondaryButton()
             }
-            .padding(Layout.gutter)
+            .padding(.horizontal, DesignSystem.Space.xxl)
+            .padding(.top, DesignSystem.Space.s)
+            .padding(.bottom, MainTabBar.scrollBottomPadding)
         }
         .screenSurface()
         .sheet(item: $editing) { draft in
@@ -85,7 +87,7 @@ struct UtilitiesView: View {
 
     private var summaryCard: some View {
         CardContainer {
-            VStack(alignment: .leading, spacing: Layout.gap) {
+            VStack(alignment: .leading, spacing: DesignSystem.Space.l) {
                 StatTile(
                     label: "Reservado este mes",
                     value: dependencies.money.string(model.totalReserved, currency: model.currency)
@@ -107,8 +109,8 @@ struct UtilitiesView: View {
 
     private func utilityCard(_ utility: UtilityEntity) -> some View {
         CardContainer {
-            VStack(alignment: .leading, spacing: Layout.gap) {
-                HStack(spacing: Layout.gap) {
+            VStack(alignment: .leading, spacing: DesignSystem.Space.l) {
+                HStack(spacing: DesignSystem.Space.l) {
                     Image(systemName: utility.icon)
                         .font(.system(size: 18))
                         .foregroundStyle(Palette.accent)
@@ -118,16 +120,23 @@ struct UtilitiesView: View {
                         Text(utility.name)
                             .font(Typography.label)
                             .foregroundStyle(Palette.primaryText)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.75)
                         Text(subtitle(for: utility))
                             .font(Typography.caption)
                             .foregroundStyle(Palette.tertiaryText)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.75)
                     }
 
-                    Spacer()
+                    Spacer(minLength: DesignSystem.Space.s)
 
                     Text(dependencies.money.string(utility.estimatedAmount, currency: utility.currency))
                         .font(Typography.amount)
                         .foregroundStyle(Palette.primaryText)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.65)
+                        .layoutPriority(1)
                 }
 
                 if let reading = model.reading(for: utility), reading.isSettled {

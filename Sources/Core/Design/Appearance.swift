@@ -4,8 +4,8 @@ import UIKit
 /// Pushes the design system into the parts of the interface SwiftUI still renders
 /// through UIKit.
 ///
-/// The tab bar does not read `Typography`, so without this the app would be Inter
-/// everywhere except the strip along the bottom of every screen.
+/// The tab bar does not read `Typography`, so without this the app would carry its
+/// own typeface everywhere except the strip along the bottom of every screen.
 ///
 /// Navigation bars are deliberately left alone: on iOS 26 they no longer honour the
 /// appearance proxy, so the screens that need typographic control draw their own

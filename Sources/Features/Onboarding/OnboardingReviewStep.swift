@@ -10,15 +10,17 @@ struct OnboardingReviewStep: View {
     let dependencies: AppDependencies
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Layout.gap) {
+        VStack(alignment: .leading, spacing: DesignSystem.Space.xl) {
             if !model.greetingName.isEmpty {
                 Text("Listo, \(model.greetingName).")
                     .font(Typography.title)
                     .foregroundStyle(Palette.primaryText)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
             }
 
             CardContainer {
-                VStack(alignment: .leading, spacing: Layout.gap) {
+                VStack(alignment: .leading, spacing: DesignSystem.Space.l) {
                     DetailRow(label: "Ingreso mensual", value: format(model.draft.totalMonthlyIncome))
 
                     RowDivider()

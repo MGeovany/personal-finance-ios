@@ -42,6 +42,10 @@ struct OnboardingDraft: Equatable {
     var remindersEnabled = true
     var reminderHour = 21
 
+    /// When the money arrives. Nil until answered, and answering is optional: the app
+    /// works without it, it just cannot be in the right place on the right day.
+    var paydaySchedule: PaydaySchedule?
+
     /// Income is the one thing a plan cannot be built without.
     var hasMinimumViableData: Bool { primaryIncome > 0 }
 

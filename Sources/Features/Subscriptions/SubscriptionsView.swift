@@ -20,7 +20,7 @@ struct SubscriptionsView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: Layout.gap) {
+            VStack(spacing: DesignSystem.Space.xl) {
                 DetailHeader(title: "Suscripciones") {
                     IconButton(systemImage: "plus", label: "Agregar suscripción", isProminent: true) {
                         editing = ChargeDraft(currency: model.currency)
@@ -57,7 +57,9 @@ struct SubscriptionsView: View {
                 }
                 .secondaryButton()
             }
-            .padding(Layout.gutter)
+            .padding(.horizontal, DesignSystem.Space.xxl)
+            .padding(.top, DesignSystem.Space.s)
+            .padding(.bottom, MainTabBar.scrollBottomPadding)
         }
         .screenSurface()
         .sheet(item: $editing) { draft in
@@ -99,13 +101,15 @@ struct SubscriptionsView: View {
 
     private func subscriptionCard(_ subscription: SubscriptionEntity) -> some View {
         CardContainer {
-            VStack(alignment: .leading, spacing: Layout.gap) {
-                HStack(spacing: Layout.gap) {
+            VStack(alignment: .leading, spacing: DesignSystem.Space.l) {
+                HStack(spacing: DesignSystem.Space.l) {
                     VStack(alignment: .leading, spacing: 3) {
-                        HStack(spacing: Layout.tightGap) {
+                        HStack(spacing: DesignSystem.Space.s) {
                             Text(subscription.name)
                                 .font(Typography.label)
                                 .foregroundStyle(Palette.primaryText)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.75)
                             if subscription.status != .active {
                                 Chip(text: subscription.status.label, tint: Palette.secondaryText)
                             }
@@ -116,13 +120,18 @@ struct SubscriptionsView: View {
                         Text(subtitle(for: subscription))
                             .font(Typography.caption)
                             .foregroundStyle(Palette.tertiaryText)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.75)
                     }
 
-                    Spacer()
+                    Spacer(minLength: DesignSystem.Space.s)
 
                     Text(dependencies.money.string(subscription.amount, currency: subscription.currency))
                         .font(Typography.amount)
                         .foregroundStyle(Palette.primaryText)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.65)
+                        .layoutPriority(1)
                 }
 
                 // The core message of this screen: what this costs in time.

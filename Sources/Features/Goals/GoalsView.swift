@@ -17,7 +17,7 @@ struct GoalsView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: Layout.gap) {
+            VStack(spacing: DesignSystem.Space.xl) {
                 ScreenHeader(title: "Metas") {
                     IconButton(systemImage: "plus", label: "Agregar meta", isProminent: true) {
                         editing = GoalDraft(currency: model.currency)
@@ -65,7 +65,9 @@ struct GoalsView: View {
                 }
                 .secondaryButton()
             }
-            .padding(Layout.gutter)
+            .padding(.horizontal, DesignSystem.Space.xxl)
+            .padding(.top, DesignSystem.Space.s)
+            .padding(.bottom, MainTabBar.scrollBottomPadding)
         }
         .screenSurface()
         .sheet(item: $editing) { draft in

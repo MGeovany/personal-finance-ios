@@ -8,7 +8,16 @@ import Foundation
 protocol PlanNotificationScheduling: Sendable {
     func requestAuthorization() async -> Bool
     /// Replaces all pending reminders with the ones this plan implies.
-    func reschedule(for plan: FinancialPlan, snapshot: FinancialSnapshot, reminder: DailyReminder) async
+    ///
+    /// - Parameter payday: when the money arrives and whether this period's abonos are
+    ///   already registered. Nil when the user has no payday set, which simply means no
+    ///   payday reminders.
+    func reschedule(
+        for plan: FinancialPlan,
+        snapshot: FinancialSnapshot,
+        reminder: DailyReminder,
+        payday: PaydayReminder?
+    ) async
     func cancelAll() async
 }
 
@@ -24,6 +33,11 @@ struct DailyReminder: Equatable, Sendable {
 /// Used in previews and tests.
 struct NoopNotificationScheduler: PlanNotificationScheduling {
     func requestAuthorization() async -> Bool { false }
-    func reschedule(for plan: FinancialPlan, snapshot: FinancialSnapshot, reminder: DailyReminder) async {}
+    func reschedule(
+        for plan: FinancialPlan,
+        snapshot: FinancialSnapshot,
+        reminder: DailyReminder,
+        payday: PaydayReminder?
+    ) async {}
     func cancelAll() async {}
 }

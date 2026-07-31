@@ -63,10 +63,15 @@ struct RootView: View {
                     if finished { dependencies.router.phase = .planChoice }
                 }
 
+        case .briefing:
+            BriefingView(dependencies: dependencies, isHandover: true) {
+                dependencies.router.phase = .main
+            }
+
         case .planChoice:
             NavigationStack {
                 PlanComparisonView(dependencies: dependencies, isInitialChoice: true) {
-                    dependencies.router.phase = .main
+                    dependencies.router.phase = .briefing
                 }
             }
 

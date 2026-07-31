@@ -15,11 +15,11 @@ struct NextPaymentCard: View {
 
     var body: some View {
         CardContainer {
-            VStack(alignment: .leading, spacing: Layout.gap) {
+            VStack(alignment: .leading, spacing: DesignSystem.Space.l) {
                 SectionHeader(title: "Tu siguiente pago")
 
                 if let debt {
-                    HStack(spacing: Layout.gap) {
+                    HStack(spacing: DesignSystem.Space.l) {
                         Image(systemName: debt.kind.icon)
                             .font(.system(size: 18))
                             .foregroundStyle(Palette.debt)
@@ -28,12 +28,16 @@ struct NextPaymentCard: View {
                             Text(debt.name)
                                 .font(Typography.label)
                                 .foregroundStyle(Palette.primaryText)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.75)
                             Text(reasonLine(for: debt))
                                 .font(Typography.caption)
                                 .foregroundStyle(Palette.tertiaryText)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.75)
                         }
 
-                        Spacer()
+                        Spacer(minLength: 0)
                     }
 
                     RowDivider()

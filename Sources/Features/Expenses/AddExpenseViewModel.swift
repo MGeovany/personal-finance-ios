@@ -63,7 +63,7 @@ final class AddExpenseViewModel {
 
         if draft.paymentMethod == .creditCard, let debtID = draft.debtID {
             return planStore.impact(
-                of: .cardPurchase(draft.amount, debtID: debtID, backed: draft.hasMoneySetAside)
+                of: .cardPurchase(draft.amount, debtID: debtID, backed: false)
             ).impact
         }
 

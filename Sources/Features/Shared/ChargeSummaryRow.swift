@@ -11,29 +11,37 @@ struct ChargeSummaryRow: View {
     var onDelete: (() -> Void)?
 
     var body: some View {
-        CardContainer(padding: Layout.gap) {
-            HStack(spacing: Layout.gap) {
+        CardContainer(padding: DesignSystem.Space.l) {
+            HStack(spacing: DesignSystem.Space.l) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(charge.name)
                         .font(Typography.label)
                         .foregroundStyle(Palette.primaryText)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.75)
 
                     if charge.frequency != .monthly {
                         Text("\(money.string(charge.amount, currency: charge.currency)) · \(charge.frequency.label.lowercased())")
                             .font(Typography.caption)
                             .foregroundStyle(Palette.tertiaryText)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.75)
                     } else if let day = charge.day {
                         Text("Día \(day)")
                             .font(Typography.caption)
                             .foregroundStyle(Palette.tertiaryText)
+                            .lineLimit(1)
                     }
                 }
 
-                Spacer(minLength: Layout.tightGap)
+                Spacer(minLength: DesignSystem.Space.s)
 
                 Text(money.string(charge.monthlyAmount, currency: charge.currency))
                     .font(Typography.amount)
                     .foregroundStyle(Palette.primaryText)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.65)
+                    .layoutPriority(1)
 
                 if let onDelete {
                     Button(action: onDelete) {

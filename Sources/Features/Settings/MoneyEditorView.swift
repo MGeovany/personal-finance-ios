@@ -24,7 +24,7 @@ struct MoneyEditorView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: Layout.sectionGap) {
+            VStack(alignment: .leading, spacing: DesignSystem.Space.xxxl) {
                 DetailHeader(title: "Tu dinero")
 
                 CardSection {
@@ -60,7 +60,9 @@ struct MoneyEditorView: View {
                 Button("Guardar", action: save)
                     .primaryButton()
             }
-            .padding(Layout.gutter)
+            .padding(.horizontal, DesignSystem.Space.xxl)
+            .padding(.top, DesignSystem.Space.s)
+            .padding(.bottom, MainTabBar.scrollBottomPadding)
         }
         .screenSurface()
     }

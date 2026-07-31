@@ -20,6 +20,7 @@ enum OnboardingStep: Int, CaseIterable, Identifiable {
     case debtAmounts
     case savings
     case goals
+    case payday
     case reminders
     case review
 
@@ -42,6 +43,7 @@ enum OnboardingStep: Int, CaseIterable, Identifiable {
         case .debtAmounts: "¿Cuánto debes en cada una?"
         case .savings: "¿Tienes algo ahorrado?"
         case .goals: "¿Hay algo que quieras lograr?"
+        case .payday: "¿Cuándo te pagan?"
         case .reminders: "¿Te recordamos cada noche?"
         case .review: "Esto es lo que entendimos"
         }
@@ -76,6 +78,8 @@ enum OnboardingStep: Int, CaseIterable, Identifiable {
             "Nunca vamos a recomendarte quedarte sin colchón. Solo necesitamos saber con qué cuentas."
         case .goals:
             "Opcional. Te vamos a mostrar cuántos días te cuesta cada meta."
+        case .payday:
+            "Ese día te recordamos cuánto abonar a cada tarjeta. Es el único día en que el plan se puede cumplir."
         case .reminders:
             "Un recordatorio en la noche para anotar lo que gastaste. Puedes apagarlo después."
         case .review:

@@ -14,19 +14,22 @@ struct GoalCardView: View {
 
     var body: some View {
         CardContainer {
-            VStack(alignment: .leading, spacing: Layout.gap) {
+            VStack(alignment: .leading, spacing: DesignSystem.Space.l) {
                 header
 
                 ProgressBarView(fraction: goal.progress, tint: goal.isComplete ? Palette.positive : Palette.accent)
 
-                HStack {
+                HStack(spacing: DesignSystem.Space.s) {
                     Text("\(money.string(goal.savedAmount, currency: goal.currency)) de \(money.string(goal.targetAmount, currency: goal.currency))")
                         .font(Typography.caption)
                         .foregroundStyle(Palette.tertiaryText)
-                    Spacer()
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                    Spacer(minLength: DesignSystem.Space.s)
                     Text("\(Int((goal.progress * 100).rounded()))%")
                         .font(Typography.captionStrong)
                         .foregroundStyle(Palette.secondaryText)
+                        .lineLimit(1)
                 }
 
                 RowDivider()
@@ -59,7 +62,7 @@ struct GoalCardView: View {
     }
 
     private var header: some View {
-        HStack(spacing: Layout.gap) {
+        HStack(spacing: DesignSystem.Space.l) {
             Image(systemName: goal.icon)
                 .font(.system(size: 18))
                 .foregroundStyle(Palette.accent)
@@ -69,14 +72,18 @@ struct GoalCardView: View {
                 Text(goal.name)
                     .font(Typography.label)
                     .foregroundStyle(Palette.primaryText)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
                 if let date = goal.targetDate {
                     Text("Meta para \(dates.dayAndMonth(date))")
                         .font(Typography.caption)
                         .foregroundStyle(Palette.tertiaryText)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
                 }
             }
 
-            Spacer()
+            Spacer(minLength: DesignSystem.Space.s)
 
             if goal.isComplete {
                 Chip(text: "Completada", tint: Palette.positive, icon: "checkmark")

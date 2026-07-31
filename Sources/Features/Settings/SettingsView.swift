@@ -7,15 +7,14 @@ struct SettingsView: View {
 
     @State private var showsWeeklyClose = false
     @State private var showsMonthlyClose = false
-    @State private var renamingSpeed: PlanSpeed?
 
     private var profile: ProfileEntity { dependencies.profile }
     private var planStore: PlanStore { dependencies.planStore }
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: Layout.sectionGap) {
-                ScreenHeader(title: "Ajustes")
+            VStack(alignment: .leading, spacing: DesignSystem.Space.xxxl) {
+                DetailHeader(title: "Ajustes")
 
                 planSection
                 toolsSection
@@ -28,8 +27,9 @@ struct SettingsView: View {
                 DeveloperSection(dependencies: dependencies)
                 #endif
             }
-            .padding(.horizontal, Layout.gutter)
-            .padding(.bottom, Layout.sectionGap)
+            .padding(.horizontal, DesignSystem.Space.xxl)
+            .padding(.top, DesignSystem.Space.s)
+            .padding(.bottom, MainTabBar.scrollBottomPadding)
         }
         .screenSurface()
         .sheet(isPresented: $showsWeeklyClose) {
@@ -37,14 +37,6 @@ struct SettingsView: View {
         }
         .sheet(isPresented: $showsMonthlyClose) {
             MonthlyCloseSheet(dependencies: dependencies)
-        }
-        .drawer(item: $renamingSpeed) { speed in
-            RenamePlanSheet(
-                speed: speed,
-                currentName: profile.name(for: speed)
-            ) { newName in
-                dependencies.preferences.rename(speed: speed, to: newName)
-            }
         }
     }
 
@@ -70,27 +62,6 @@ struct SettingsView: View {
                 )
             }
             .buttonStyle(.plain)
-
-            RowDivider()
-
-            ForEach(PlanSpeed.displayOrder) { speed in
-                Button {
-                    renamingSpeed = speed
-                } label: {
-                    HStack {
-                        Text(profile.name(for: speed))
-                            .font(Typography.bodyStrong)
-                            .foregroundStyle(Palette.primaryText)
-                        Spacer(minLength: DesignSystem.Space.s)
-                        Text("Renombrar")
-                            .font(Typography.label)
-                            .foregroundStyle(Palette.secondaryText)
-                    }
-                    .frame(minHeight: Layout.minimumTouch)
-                    .contentShape(.rect)
-                }
-                .buttonStyle(.plain)
-            }
         }
     }
 
@@ -220,38 +191,5 @@ struct SettingsView: View {
             second: 0,
             of: Date()
         ) ?? Date()
-    }
-}
-
-/// Renames a plan. The three speeds keep their behaviour; only the label changes.
-///
-/// One field and one sentence of context, which is exactly what a drawer is for.
-struct RenamePlanSheet: View {
-    let speed: PlanSpeed
-    let currentName: String
-    let onSave: (String) -> Void
-
-    @State private var name: String
-    @Environment(\.dismiss) private var dismiss
-
-    init(speed: PlanSpeed, currentName: String, onSave: @escaping (String) -> Void) {
-        self.speed = speed
-        self.currentName = currentName
-        self.onSave = onSave
-        self._name = State(initialValue: currentName)
-    }
-
-    var body: some View {
-        Drawer(title: "Renombrar plan", message: speed.shortDescription, cancelTitle: "Cancelar") {
-            CardContainer {
-                CeroTextField(title: "Nombre", text: $name, placeholder: speed.defaultName)
-            }
-
-            Button("Guardar") {
-                onSave(name)
-                dismiss()
-            }
-            .primaryButton()
-        }
     }
 }

@@ -1,10 +1,6 @@
 import Foundation
 
 /// An expense being entered.
-///
-/// The backing is derived rather than asked for directly: the user answers
-/// "do you already have the money for this?" and this turns that answer into the
-/// consequence.
 struct ExpenseDraft: Equatable {
     var amount: Money = 0
     var currency: CurrencyCode = .hnl
@@ -16,21 +12,16 @@ struct ExpenseDraft: Equatable {
     var note: String = ""
     var isRecurring: Bool = false
     var goalID: UUID?
-    /// The answer to whether the money for a card purchase already exists.
-    var hasMoneySetAside: Bool = true
 
     var isValid: Bool {
         amount > 0 && !categoryKey.isEmpty && (paymentMethod != .creditCard || debtID != nil)
     }
 
-    /// Cash and debit leave immediately. A card purchase either consumes money the
-    /// user already has. Which must then be locked away. Or becomes new debt.
+    /// Cash and debit leave immediately. A credit-card charge becomes debt until
+    /// it is paid; the sheet no longer asks whether the money is already set aside.
     var backing: ExpenseBacking {
-        guard paymentMethod == .creditCard else { return .settled }
-        return hasMoneySetAside ? .reserved : .financed
+        paymentMethod == .creditCard ? .financed : .settled
     }
-
-    var needsBackingQuestion: Bool { paymentMethod.requiresBackingQuestion }
 
     func makeEntity() -> ExpenseEntity {
         ExpenseEntity(

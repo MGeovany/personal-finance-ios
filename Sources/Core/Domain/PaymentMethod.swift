@@ -28,8 +28,6 @@ enum PaymentMethod: String, CaseIterable, Codable, Identifiable, Sendable {
         }
     }
 
-    /// Only credit-card purchases raise the question of whether the money exists.
-    var requiresBackingQuestion: Bool { self == .creditCard }
 }
 
 /// Whether a card purchase has money set aside for it.

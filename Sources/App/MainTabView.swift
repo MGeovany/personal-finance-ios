@@ -1,77 +1,63 @@
 import SwiftUI
 
-/// The five places the app lives, in the order they matter: today, the debts, the
-/// budget, the goals, and the settings behind them.
+/// The main shell: four tabs around a center add button.
+///
+/// The cradle bar is drawn by the shell rather than `TabView`, so the layout can
+/// stay two-and-two around the plus without fighting the system tab bar. Ajustes
+/// lives behind the gear on Home so the bar stays balanced.
 struct MainTabView: View {
     let dependencies: AppDependencies
-    @State private var selection: Tab = .home
 
-    private enum Tab: Hashable {
-        case home, debts, budget, goals, settings
-    }
+    @State private var selection: MainTab = .home
+    @State private var showsAddExpense = false
 
     var body: some View {
-        TabView(selection: $selection) {
+        tabContent
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                MainTabBar(selection: $selection, onAdd: { showsAddExpense = true })
+            }
+            .ignoresSafeArea(.keyboard)
+            .sheet(isPresented: $showsAddExpense) {
+                AddExpenseSheet(dependencies: dependencies)
+            }
+            .task { await dependencies.refreshReminders() }
+    }
+
+    @ViewBuilder
+    private var tabContent: some View {
+        switch selection {
+        case .home:
             NavigationStack {
                 HomeView(dependencies: dependencies, model: makeHomeModel())
             }
-            .tabItem { Label("Hoy", systemImage: "house") }
-            .tag(Tab.home)
-
+        case .debts:
             NavigationStack {
                 DebtsView(dependencies: dependencies)
             }
-            .tabItem { Label("Deudas", systemImage: "creditcard") }
-            .tag(Tab.debts)
-
+        case .budget:
             NavigationStack {
                 BudgetView(dependencies: dependencies)
             }
-            .tabItem { Label("Presupuesto", systemImage: "chart.pie") }
-            .tag(Tab.budget)
-
+        case .goals:
             NavigationStack {
                 GoalsView(dependencies: dependencies)
             }
-            .tabItem { Label("Metas", systemImage: "target") }
-            .tag(Tab.goals)
-
-            NavigationStack {
-                SettingsView(dependencies: dependencies)
-            }
-            .tabItem { Label("Ajustes", systemImage: "gearshape") }
-            .tag(Tab.settings)
         }
-        .task { await scheduleNotifications() }
     }
 
     private func makeHomeModel() -> HomeViewModel {
         HomeViewModel(
             planStore: dependencies.planStore,
             progress: BudgetProgressCalculator(expenses: dependencies.expenses),
+            expenses: dependencies.expenses,
             debts: dependencies.debts,
             subscriptions: dependencies.subscriptions,
             utilities: dependencies.utilities,
             goals: dependencies.goals,
-            reviews: dependencies.reviews
-        )
-    }
-
-    /// Reminders follow the plan, so they are rebuilt whenever the app starts with
-    /// notifications enabled.
-    private func scheduleNotifications() async {
-        let profile = dependencies.profile
-        guard profile.notificationsEnabled else { return }
-        guard await dependencies.notifications.requestAuthorization() else { return }
-
-        await dependencies.notifications.reschedule(
-            for: dependencies.planStore.activePlan,
-            snapshot: dependencies.planStore.snapshot,
-            reminder: DailyReminder(
-                hour: profile.reminderHour,
-                minute: profile.reminderMinute,
-                isEnabled: profile.notificationsEnabled
-            )
+            briefingProvider: dependencies.briefingProvider,
+            briefingPresenter: dependencies.briefingPresenter,
+            payday: dependencies.paydayStatus
         )
     }
 }

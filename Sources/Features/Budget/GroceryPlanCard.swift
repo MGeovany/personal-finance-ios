@@ -25,10 +25,10 @@ struct GroceryPlanCard: View {
 
     var body: some View {
         CardContainer {
-            VStack(alignment: .leading, spacing: Layout.gap) {
+            VStack(alignment: .leading, spacing: DesignSystem.Space.l) {
                 SectionHeader(title: "Supermercado")
 
-                HStack(spacing: Layout.tightGap) {
+                HStack(spacing: DesignSystem.Space.s) {
                     ForEach(GroceryMode.allCases) { mode in
                         SelectableChip(text: label(for: mode), isSelected: plan.mode == mode) {
                             onModeChange(mode, mode.defaultMainShare)

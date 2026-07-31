@@ -10,7 +10,7 @@ struct OnboardingGoalsStep: View {
     @Environment(\.moneyFormatter) private var money
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Layout.gap) {
+        VStack(alignment: .leading, spacing: DesignSystem.Space.xl) {
             ChoiceStack {
                 LazyVGrid(
                     columns: [GridItem(.flexible(), spacing: DesignSystem.Space.s), GridItem(.flexible())],
@@ -39,6 +39,7 @@ struct OnboardingGoalsStep: View {
 
             if !model.draft.goals.isEmpty {
                 amounts
+                    .id("goalAmounts")
             }
         }
         .animation(DesignSystem.Motion.swap, value: model.draft.goals.count)
@@ -55,13 +56,14 @@ struct OnboardingGoalsStep: View {
     }
 
     private var amounts: some View {
-        VStack(alignment: .leading, spacing: Layout.sectionGap) {
+        VStack(alignment: .leading, spacing: DesignSystem.Space.xxl) {
             Text("¿Cuánto necesitas?")
                 .sectionHeaderStyle()
                 .padding(.horizontal, DesignSystem.Space.xxs)
 
             ForEach(model.draft.goals) { goal in
                 goalAmount(goal)
+                    .id(goal.id)
             }
         }
         .transition(.move(edge: .top).combined(with: .opacity))
@@ -70,19 +72,21 @@ struct OnboardingGoalsStep: View {
     @ViewBuilder
     private func goalAmount(_ goal: GoalDraft) -> some View {
         VStack(alignment: .leading, spacing: DesignSystem.Space.s) {
-            HStack(spacing: Layout.gap) {
+            HStack(spacing: DesignSystem.Space.l) {
                 Image(systemName: goal.icon)
                     .font(.system(size: 16, weight: .medium))
                     .foregroundStyle(Palette.secondaryText)
                 Text(goal.name)
                     .font(Typography.bodyStrong)
                     .foregroundStyle(Palette.primaryText)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
             }
 
             if template(for: goal) == .debtFree {
                 debtFreeSummary(goal)
             } else if template(for: goal) == .trip {
-                CardContainer {
+                CardSection {
                     MoneyField(
                         title: "Costo del viaje",
                         amount: Binding(
@@ -92,6 +96,9 @@ struct OnboardingGoalsStep: View {
                         currency: model.draft.currency,
                         caption: "Un aproximado está bien."
                     )
+
+                    RowDivider()
+                    dateRow(for: goal)
                 }
             } else {
                 AmountChoices(
@@ -104,7 +111,29 @@ struct OnboardingGoalsStep: View {
                     customTitle: "Otra cantidad",
                     customPlaceholder: "Lo que cuesta"
                 )
+
+                if template(for: goal)?.asksForDate == true {
+                    CardSection {
+                        dateRow(for: goal)
+                    }
+                }
             }
+        }
+    }
+
+    /// The day the goal lands on, for the goals that have one. Optional on purpose:
+    /// wanting a trip without knowing when is a real answer, and a date the user did
+    /// not choose would be worse than none.
+    @ViewBuilder
+    private func dateRow(for goal: GoalDraft) -> some View {
+        if let question = template(for: goal)?.dateQuestion {
+            OptionalDateRow(
+                title: question,
+                date: Binding(
+                    get: { goal.targetDate },
+                    set: { model.setTargetDate($0, for: goal) }
+                )
+            )
         }
     }
 
