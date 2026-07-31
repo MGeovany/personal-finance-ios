@@ -19,7 +19,7 @@ struct OnboardingReviewStep: View {
 
             CardContainer {
                 VStack(alignment: .leading, spacing: Layout.gap) {
-                    DetailRow(label: "Te entra al mes", value: format(model.draft.totalMonthlyIncome))
+                    DetailRow(label: "Ingreso mensual", value: format(model.draft.totalMonthlyIncome))
 
                     RowDivider()
 
@@ -52,8 +52,6 @@ struct OnboardingReviewStep: View {
                     )
                 }
             }
-
-            InfoBanner(message: closingMessage, severity: closingSeverity)
         }
     }
 
@@ -61,19 +59,6 @@ struct OnboardingReviewStep: View {
     /// which are shown on their own line because they are the ones the plan attacks.
     private var committed: Money {
         model.draft.totalCommitted - model.draft.totalMinimumPayments
-    }
-
-    private var closingMessage: String {
-        if model.draft.estimatedAvailable <= 0 {
-            return "Según lo que declaraste, no te queda nada libre. Vamos a mostrarte de dónde se podría recortar antes de proponerte una fecha."
-        }
-        return model.draft.totalDebt > 0
-            ? "Con eso vamos a calcular tres planes a distintas velocidades. Podrás cambiar de plan cuando quieras y ver cómo se mueve tu fecha."
-            : "No registraste deudas, así que vamos a calcular tres presupuestos con distintos niveles de holgura."
-    }
-
-    private var closingSeverity: PlanWarning.Severity {
-        model.draft.estimatedAvailable <= 0 ? .caution : .info
     }
 
     private func format(_ amount: Money) -> String {

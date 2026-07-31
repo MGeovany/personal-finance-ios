@@ -103,8 +103,8 @@ struct MockUser {
     private func seedDebts() {
         debts.add(
             DebtEntity(
-                name: "Tarjeta Azul",
-                institution: "Banco Atlántida",
+                name: "BAC Visa Signature",
+                institution: "BAC",
                 kind: .creditCard,
                 balance: 62_000,
                 creditLimit: 80_000,
@@ -116,8 +116,8 @@ struct MockUser {
         )
         debts.add(
             DebtEntity(
-                name: "Tarjeta Oro",
-                institution: "BAC",
+                name: "Ficohsa Visa Gold",
+                institution: "Ficohsa",
                 kind: .creditCard,
                 balance: 18_500,
                 creditLimit: 30_000,
@@ -130,7 +130,7 @@ struct MockUser {
         debts.add(
             DebtEntity(
                 name: "Préstamo carro",
-                institution: "Ficohsa",
+                institution: "Atlántida",
                 kind: .carLoan,
                 balance: 95_000,
                 annualRate: 0.14,

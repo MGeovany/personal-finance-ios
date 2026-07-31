@@ -27,15 +27,26 @@ struct NotificationContentBuilder: Sendable {
             + subscriptionReminders(snapshot: snapshot, reminder: reminder)
     }
 
-    // MARK: - The nightly nudge
+    // MARK: - The daily nudge
 
+    /// Asks about the spending the chosen moment can actually be asking about. At
+    /// breakfast that is yesterday's, at lunch it is the morning's, at night it is
+    /// the whole day. A reminder that asks about "hoy" at 8:00 AM answers itself.
     private func dailyReview(_ reminder: DailyReminder) -> PlannedNotification {
         PlannedNotification(
             id: "daily-review",
-            title: "¿Ya agregaste tus gastos de hoy?",
+            title: title(for: ReminderMoment.containing(hour: reminder.hour)),
             body: "Revisa tus transacciones en Wallet y en tus aplicaciones bancarias.",
             trigger: .daily(hour: reminder.hour, minute: reminder.minute)
         )
+    }
+
+    private func title(for moment: ReminderMoment) -> String {
+        switch moment {
+        case .morning: "¿Anotaste lo que gastaste ayer?"
+        case .midday: "¿Ya anotaste lo que has gastado hoy?"
+        case .beforeBed: "¿Ya agregaste tus gastos de hoy?"
+        }
     }
 
     // MARK: - Dates that cost money if missed

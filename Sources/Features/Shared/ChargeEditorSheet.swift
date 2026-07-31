@@ -36,6 +36,18 @@ struct ChargeEditorSheet: View {
             }
         }
 
+        /// A fixed expense is the same amount on the same schedule every month, so the
+        /// day it leaves changes nothing the plan calculates. Asking for it only adds
+        /// a field. The charges whose dates the app actually acts on, a utility to
+        /// reserve for or a subscription to cancel before it bills, still ask.
+        var asksForDay: Bool { self != .fixedExpense }
+
+        /// `MoneyField` already lets any amount be typed in a second currency, so a
+        /// separate currency row is only worth its space where the charge itself
+        /// belongs to another currency, like a card statement or a subscription
+        /// priced in dollars.
+        var asksForCurrency: Bool { self != .fixedExpense }
+
         var namePlaceholder: String {
             switch self {
             case .income: "Trabajo por cuenta propia"
@@ -73,16 +85,22 @@ struct ChargeEditorSheet: View {
                     options: ChargeFrequency.allCases,
                     label: \.label
                 )
-                RowDivider()
-                SelectRow(
-                    title: "Moneda",
-                    selection: $draft.currency,
-                    options: currencies,
-                    label: { $0.rawValue },
-                    detail: { $0.displayName }
-                )
-                RowDivider()
-                DayOfMonthPicker(title: purpose.dayLabel, day: $draft.day)
+
+                if purpose.asksForCurrency {
+                    RowDivider()
+                    SelectRow(
+                        title: "Moneda",
+                        selection: $draft.currency,
+                        options: currencies,
+                        label: { $0.rawValue },
+                        detail: { $0.displayName }
+                    )
+                }
+
+                if purpose.asksForDay {
+                    RowDivider()
+                    DayOfMonthPicker(title: purpose.dayLabel, day: $draft.day)
+                }
             }
 
             if purpose == .subscription {

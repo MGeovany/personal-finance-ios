@@ -58,6 +58,7 @@ struct CeroTextField: View {
 struct PercentField: View {
     let title: String
     @Binding var percent: Double
+    var caption: String? = nil
 
     @State private var text: String = ""
     @FocusState private var isFocused: Bool
@@ -73,15 +74,37 @@ struct PercentField: View {
                     .keyboardType(.decimalPad)
                     .focused($isFocused)
                     .onChange(of: text) { _, newValue in
-                        percent = Double(newValue.replacingOccurrences(of: ",", with: ".")) ?? 0
+                        percent = parse(newValue)
                     }
                 Text("%")
                     .font(Typography.amount)
                     .foregroundStyle(Palette.tertiaryText)
             }
             .fieldWell(isFocused: isFocused)
+
+            if let caption {
+                Text(caption)
+                    .font(Typography.caption)
+                    .foregroundStyle(Palette.tertiaryText)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
         }
-        .onAppear { text = percent > 0 ? trimmed(percent) : "" }
+        .onAppear { show(percent) }
+        .onChange(of: percent) { _, newValue in
+            // Only when the value changed from outside, so a field being typed into
+            // is never rewritten under the user. Lets a caller fill the rate in from
+            // an estimate and have it appear.
+            guard parse(text) != newValue else { return }
+            show(newValue)
+        }
+    }
+
+    private func show(_ value: Double) {
+        text = value > 0 ? trimmed(value) : ""
+    }
+
+    private func parse(_ input: String) -> Double {
+        Double(input.replacingOccurrences(of: ",", with: ".")) ?? 0
     }
 
     private func trimmed(_ value: Double) -> String {

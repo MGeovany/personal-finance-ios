@@ -69,7 +69,9 @@ enum OnboardingStep: Int, CaseIterable, Identifiable {
         case .debtKinds:
             "Marca las que tengas. Si no tienes ninguna, dilo y seguimos."
         case .debtAmounts:
-            "Para tarjetas: banco, nombre y saldo. La tasa es opcional. En el resto, elige un tamaño."
+            // The card form says what it needs by itself, and the other kinds are
+            // answered by tapping a size. Explaining it here only repeated the screen.
+            nil
         case .savings:
             "Nunca vamos a recomendarte quedarte sin colchón. Solo necesitamos saber con qué cuentas."
         case .goals:

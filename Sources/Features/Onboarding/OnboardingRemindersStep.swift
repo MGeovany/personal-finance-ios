@@ -1,30 +1,25 @@
 import SwiftUI
 
-/// Whether the app should ask, each night, what was spent.
+/// Whether the app should ask, each day, what was spent.
 ///
 /// The plan only stays true if expenses get logged, and the reminder is what makes
-/// that happen. Asked here rather than buried in settings, and with the hour offered
-/// as three choices so answering it takes one tap.
+/// that happen. Asked here rather than buried in settings, and offered as moments in
+/// the day rather than a clock: people know when they check their phone, not which
+/// hour they want an alarm at.
 struct OnboardingRemindersStep: View {
     @Bindable var model: OnboardingViewModel
 
-    private let hours = [
-        (hour: 20, label: "En la noche", detail: "8:00 PM"),
-        (hour: 21, label: "Antes de dormir", detail: "9:00 PM"),
-        (hour: 22, label: "Ya acostado", detail: "10:00 PM"),
-    ]
-
     var body: some View {
         ChoiceStack {
-            ForEach(hours, id: \.hour) { option in
+            ForEach(ReminderMoment.allCases) { moment in
                 ChoiceCard(
-                    title: option.label,
-                    detail: option.detail,
-                    icon: "bell",
-                    isSelected: model.draft.remindersEnabled && model.draft.reminderHour == option.hour
+                    title: moment.label,
+                    detail: moment.detail,
+                    icon: moment.icon,
+                    isSelected: model.draft.remindersEnabled && model.draft.reminderHour == moment.hour
                 ) {
                     model.draft.remindersEnabled = true
-                    model.draft.reminderHour = option.hour
+                    model.draft.reminderHour = moment.hour
                     model.advanceAfterAnswer()
                 }
             }
