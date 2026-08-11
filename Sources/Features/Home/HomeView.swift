@@ -120,8 +120,9 @@ struct HomeView: View {
                     route = .dailyReview
                 }
                 NavigationLink {
+                    // Settings hides the navigation bar itself, so there is no back
+                    // button here left to suppress.
                     SettingsView(dependencies: dependencies)
-                        .navigationBarBackButtonHidden(true)
                 } label: {
                     Image(systemName: "gearshape")
                 }

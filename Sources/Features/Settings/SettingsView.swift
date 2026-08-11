@@ -32,6 +32,9 @@ struct SettingsView: View {
             .padding(.bottom, MainTabBar.scrollBottomPadding)
         }
         .screenSurface()
+        // `DetailHeader` already draws the title and its own back button, so the system
+        // bar was an empty strip taking height off the top of the screen.
+        .toolbar(.hidden, for: .navigationBar)
         .sheet(isPresented: $showsWeeklyClose) {
             WeeklyCloseSheet(dependencies: dependencies)
         }
